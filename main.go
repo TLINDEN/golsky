@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -287,10 +288,17 @@ func (game *Game) Draw(screen *ebiten.Image) {
 
 		ebitenutil.DebugPrint(
 			screen,
-			fmt.Sprintf("FPS: %d, TPG: %d, Generations: %d   %s",
-				game.Speed, game.TPG, game.Generations, paused),
+			fmt.Sprintf("FPS: %0.2f, TPG: %d, Mem: %0.2f MB, Generations: %d   %s",
+				ebiten.ActualTPS(), game.TPG, GetMem(), game.Generations, paused),
 		)
 	}
+}
+
+func GetMem() float64 {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	return float64(m.Alloc) / 1024 / 1024
 }
 
 func (game *Game) InitGrid() {
@@ -398,7 +406,7 @@ func main() {
 	pflag.IntVarP(&game.Height, "height", "H", 40, "grid height in cells")
 	pflag.IntVarP(&game.Cellsize, "cellsize", "c", 8, "cell size in pixels")
 	pflag.IntVarP(&game.Density, "density", "D", 10, "density of random cells")
-	pflag.IntVarP(&game.TPG, "ticks-per-generation", "t", 1, "game speed: the higher the slower (default: 1)")
+	pflag.IntVarP(&game.TPG, "ticks-per-generation", "t", 10, "game speed: the higher the slower (default: 10)")
 
 	pflag.StringVarP(&rule, "rule", "r", "B3/S23", "game rule")
 
