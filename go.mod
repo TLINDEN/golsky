@@ -1,4 +1,4 @@
-module gameoflife
+module github.com/tlinden/gameoflife
 
 go 1.22
 

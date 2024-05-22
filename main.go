@@ -10,7 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alecthomas/repr"
+	"github.com/tlinden/gameoflife/rle"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -40,12 +41,13 @@ type Game struct {
 	ScreenWidth, ScreenHeight         int
 	Generations                       int // Stats
 	Black, White, Grey, Beige         color.RGBA
-	TPG                               int    // ticks per generation/game speed, 1==max
-	TicksElapsed                      int    // tick counter for game speed
-	Debug, Paused, Empty, Invert      bool   // game modi
-	ShowEvolution, NoGrid, RunOneStep bool   // flags
-	Rule                              *Rule  // which rule to use, default: B3/S23
-	Tiles                             Images // pre-computed tiles for dead and alife cells
+	TPG                               int      // ticks per generation/game speed, 1==max
+	TicksElapsed                      int      // tick counter for game speed
+	Debug, Paused, Empty, Invert      bool     // game modi
+	ShowEvolution, NoGrid, RunOneStep bool     // flags
+	Rule                              *Rule    // which rule to use, default: B3/S23
+	Tiles                             Images   // pre-computed tiles for dead and alife cells
+	RLE                               *rle.RLE // loaded GOL pattern from RLE file
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -294,6 +296,7 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+// returns current memory usage in MB
 func GetMem() float64 {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
@@ -301,6 +304,28 @@ func GetMem() float64 {
 	return float64(m.Alloc) / 1024 / 1024
 }
 
+// load a pre-computed pattern from RLE file
+func (game *Game) InitPattern() {
+	if game.RLE != nil {
+		startX := (game.Width / 2) - (game.RLE.Width / 2)
+		startY := (game.Height / 2) - (game.RLE.Height / 2)
+		var y, x int
+
+		for rowIndex, patternRow := range game.RLE.Pattern {
+			for colIndex := range patternRow {
+				if game.RLE.Pattern[rowIndex][colIndex] > 0 {
+					x = colIndex + startX
+					y = rowIndex + startY
+
+					game.History.Data[y][x] = 1
+					game.Grids[0].Data[y][x] = 1
+				}
+			}
+		}
+	}
+}
+
+// initialize playing field/grid
 func (game *Game) InitGrid() {
 	grid := &Grid{Data: make([][]int, game.Height)}
 	gridb := &Grid{Data: make([][]int, game.Height)}
@@ -310,6 +335,7 @@ func (game *Game) InitGrid() {
 		grid.Data[y] = make([]int, game.Width)
 		gridb.Data[y] = make([]int, game.Width)
 		history.Data[y] = make([]int, game.Width)
+
 		if !game.Empty {
 			for x := 0; x < game.Width; x++ {
 				if rand.Intn(game.Density) == 1 {
@@ -370,6 +396,7 @@ func (game *Game) Init() {
 	game.ScreenHeight = game.Cellsize * game.Height
 
 	game.InitGrid()
+	game.InitPattern()
 	game.InitTiles()
 
 	game.Index = 0
@@ -401,6 +428,7 @@ func main() {
 	game := &Game{}
 	showversion := false
 	var rule string
+	var rlefile string
 
 	pflag.IntVarP(&game.Width, "width", "W", 40, "grid width in cells")
 	pflag.IntVarP(&game.Height, "height", "H", 40, "grid height in cells")
@@ -409,6 +437,7 @@ func main() {
 	pflag.IntVarP(&game.TPG, "ticks-per-generation", "t", 10, "game speed: the higher the slower (default: 10)")
 
 	pflag.StringVarP(&rule, "rule", "r", "B3/S23", "game rule")
+	pflag.StringVarP(&rlefile, "rlefile", "f", "", "RLE pattern file")
 
 	pflag.BoolVarP(&showversion, "version", "v", false, "show version")
 	pflag.BoolVarP(&game.Paused, "paused", "p", false, "do not start simulation (use space to start)")
@@ -427,7 +456,27 @@ func main() {
 
 	game.Rule = ParseGameRule(rule)
 
-	repr.Print(game.TPG)
+	if rlefile != "" {
+		content, err := os.ReadFile(rlefile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		parsedRle, err := rle.Parse(string(content))
+		if err != nil {
+			log.Fatalf("failed to load RLE pattern file: %s", err)
+		}
+
+		if parsedRle.Width > game.Width || parsedRle.Height > game.Height {
+			log.Fatal("loaded RLE pattern is too large for game grid, adjust width+height")
+		}
+
+		game.RLE = &parsedRle
+
+		// RLE needs an empty grid
+		game.Empty = true
+	}
+
 	game.Init()
 
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
