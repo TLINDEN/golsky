@@ -3,9 +3,9 @@ module github.com/tlinden/gameoflife
 go 1.22
 
 require (
-	github.com/alecthomas/repr v0.4.0
 	github.com/hajimehoshi/ebiten/v2 v2.7.4
 	github.com/spf13/pflag v1.0.5
+	golang.org/x/image v0.16.0
 )
 
 require (

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/tlinden/gameoflife/rle"
+	"golang.org/x/image/math/f64"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -48,6 +49,9 @@ type Game struct {
 	Rule                              *Rule    // which rule to use, default: B3/S23
 	Tiles                             Images   // pre-computed tiles for dead and alife cells
 	RLE                               *rle.RLE // loaded GOL pattern from RLE file
+	Camera                            Camera
+	World                             *ebiten.Image
+	WheelTurned                       bool
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -195,30 +199,15 @@ func (game *Game) CheckInput() {
 		game.Paused = true // drawing while running makes no sense
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
+	if ebiten.IsKeyPressed(ebiten.KeyPageDown) {
 		if game.TPG < 120 {
 			game.TPG++
 		}
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
+	if ebiten.IsKeyPressed(ebiten.KeyPageUp) {
 		if game.TPG > 1 {
 			game.TPG--
-		}
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
-		if game.TPG <= 115 {
-			game.TPG += 5
-		}
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyPageUp) {
-		switch {
-		case game.TPG > 5:
-			game.TPG -= 5
-		case game.TPG <= 5:
-			game.TPG = 1
 		}
 	}
 
@@ -227,6 +216,57 @@ func (game *Game) CheckInput() {
 			game.RunOneStep = true
 		}
 	}
+
+	// Pane
+	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		game.Camera.Position[0] -= 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		game.Camera.Position[0] += 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		game.Camera.Position[1] -= 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		game.Camera.Position[1] += 1
+	}
+
+	// Zoom
+	_, dy := ebiten.Wheel()
+	if ebiten.IsKeyPressed(ebiten.KeyO) {
+		if game.Camera.ZoomFactor > -2400 {
+			game.Camera.ZoomFactor -= 1
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyI) {
+		if game.Camera.ZoomFactor < 2400 {
+			game.Camera.ZoomFactor += 1
+		}
+	}
+
+	step := 1
+	if game.WheelTurned {
+		step = 50
+	} else {
+		game.WheelTurned = false
+	}
+
+	if dy < 0 {
+		if game.Camera.ZoomFactor > -2400 {
+			game.Camera.ZoomFactor -= step
+		}
+	}
+
+	if dy > 0 {
+		if game.Camera.ZoomFactor < 2400 {
+			game.Camera.ZoomFactor += step
+		}
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		game.Camera.Reset()
+	}
+
 }
 
 func (game *Game) Update() error {
@@ -257,10 +297,11 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	// themselfes will be 1px smaller as their nominal size, producing
 	// a nice grey grid with grid lines
 	op := &ebiten.DrawImageOptions{}
+
 	if game.NoGrid {
-		screen.Fill(game.White)
+		game.World.Fill(game.White)
 	} else {
-		screen.Fill(game.Grey)
+		game.World.Fill(game.Grey)
 	}
 
 	for y := 0; y < game.Height; y++ {
@@ -271,16 +312,20 @@ func (game *Game) Draw(screen *ebiten.Image) {
 			switch game.Grids[game.Index].Data[y][x] {
 			case 1:
 
-				screen.DrawImage(game.Tiles.Black, op)
+				game.World.DrawImage(game.Tiles.Black, op)
 			case 0:
 				if game.History.Data[y][x] == 1 && game.ShowEvolution {
-					screen.DrawImage(game.Tiles.Beige, op)
+					game.World.DrawImage(game.Tiles.Beige, op)
 				} else {
-					screen.DrawImage(game.Tiles.White, op)
+					game.World.DrawImage(game.Tiles.White, op)
 				}
 			}
 		}
 	}
+
+	game.Camera.Render(game.World, screen)
+
+	//worldX, worldY := game.Camera.ScreenToWorld(ebiten.CursorPosition())
 
 	if game.Debug {
 		paused := ""
@@ -394,6 +439,15 @@ func (game *Game) Init() {
 	// setup the game
 	game.ScreenWidth = game.Cellsize * game.Width
 	game.ScreenHeight = game.Cellsize * game.Height
+
+	game.Camera = Camera{
+		ViewPort: f64.Vec2{
+			float64(game.ScreenWidth),
+			float64(game.ScreenHeight),
+		},
+	}
+
+	game.World = ebiten.NewImage(game.ScreenWidth, game.ScreenHeight)
 
 	game.InitGrid()
 	game.InitPattern()
