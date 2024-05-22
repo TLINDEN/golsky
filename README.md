@@ -15,7 +15,6 @@ You'll need the golang toolchain.
 The game has a couple of commandline options:
 
 ```default
-
 Usage of ./gameoflife:
   -c, --cellsize int     cell size in pixels (default 8)
   -d, --debug            show debug info
@@ -23,6 +22,8 @@ Usage of ./gameoflife:
   -e, --empty            start with an empty screen
   -H, --height int       grid height in cells (default 40)
   -i, --invert           invert colors (dead cell: black)
+  -n, --nogrid           do not draw grid lines
+  -p, --paused           do not start simulation (use space to start)
   -r, --rule string      game rule (default "B3/S23")
   -s, --show-evolution   show evolution tracks
   -t, --tps int          game speed in ticks per second (default 60)
@@ -35,6 +36,7 @@ While it runs, there are a couple of commands you can use:
 * left mouse click: set a cell to alife
 * right mouse click: set a cell to dead
 * space: pause or resume the game
+* while game is paused: press n to forward one step
 * q: quit
 * up arrow: speed up
 * down arrow: slow down

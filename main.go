@@ -27,17 +27,23 @@ type Grid struct {
 	Data [][]int
 }
 
+type Images struct {
+	Black, White, Beige *ebiten.Image
+}
+
 type Game struct {
-	Grids                                       []*Grid // 2 grids: one current, one next
-	History                                     *Grid
-	Index                                       int // points to current grid
-	Width, Height, Cellsize, Density            int
-	ScreenWidth, ScreenHeight                   int
-	Generations                                 int
-	Black, White, Grey, Beige                   color.RGBA
-	Speed                                       int
-	Debug, Paused, Empty, Invert, ShowEvolution bool
-	Rule                                        *Rule
+	Grids                             []*Grid // 2 grids: one current, one next
+	History                           *Grid
+	Index                             int // points to current grid
+	Width, Height, Cellsize, Density  int
+	ScreenWidth, ScreenHeight         int
+	Generations                       int
+	Black, White, Grey, Beige         color.RGBA
+	Speed                             int
+	Debug, Paused, Empty, Invert      bool
+	ShowEvolution, NoGrid, RunOneStep bool
+	Rule                              *Rule
+	Tiles                             Images
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -101,6 +107,10 @@ func (game *Game) UpdateCells() {
 
 	// global counter
 	game.Generations++
+
+	if game.RunOneStep {
+		game.RunOneStep = false
+	}
 }
 
 // a GOL rule
@@ -198,28 +208,22 @@ func (game *Game) CheckInput() {
 			ebiten.SetTPS(game.Speed)
 		}
 	}
+
+	if game.Paused {
+		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			game.RunOneStep = true
+		}
+	}
 }
 
 func (game *Game) Update() error {
 	game.CheckInput()
 
-	if !game.Paused {
+	if !game.Paused || game.RunOneStep {
 		game.UpdateCells()
 	}
 
 	return nil
-}
-
-// fill a cell with the given color
-func FillCell(screen *ebiten.Image, x, y, cellsize int, col color.RGBA) {
-	vector.DrawFilledRect(
-		screen,
-		float32(x*cellsize+1),
-		float32(y*cellsize+1),
-		float32(cellsize-1),
-		float32(cellsize-1),
-		col, false,
-	)
 }
 
 // set a cell to alive or dead
@@ -239,18 +243,27 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	// we  fill the whole  screen with  a background color,  the cells
 	// themselfes will be 1px smaller as their nominal size, producing
 	// a nice grey grid with grid lines
-	screen.Fill(game.Grey)
+	op := &ebiten.DrawImageOptions{}
+	if game.NoGrid {
+		screen.Fill(game.White)
+	} else {
+		screen.Fill(game.Grey)
+	}
 
 	for y := 0; y < game.Height; y++ {
 		for x := 0; x < game.Width; x++ {
+			op.GeoM.Reset()
+			op.GeoM.Translate(float64(x*game.Cellsize), float64(y*game.Cellsize))
+
 			switch game.Grids[game.Index].Data[y][x] {
 			case 1:
-				FillCell(screen, x, y, game.Cellsize, game.Black)
+
+				screen.DrawImage(game.Tiles.Black, op)
 			case 0:
 				if game.History.Data[y][x] == 1 && game.ShowEvolution {
-					FillCell(screen, x, y, game.Cellsize, game.Beige)
+					screen.DrawImage(game.Tiles.Beige, op)
 				} else {
-					FillCell(screen, x, y, game.Cellsize, game.White)
+					screen.DrawImage(game.Tiles.White, op)
 				}
 			}
 		}
@@ -270,11 +283,7 @@ func (game *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (game *Game) Init() {
-	// setup the game
-	game.ScreenWidth = game.Cellsize * game.Width
-	game.ScreenHeight = game.Cellsize * game.Height
-
+func (game *Game) InitGrid() {
 	grid := &Grid{Data: make([][]int, game.Height)}
 	gridb := &Grid{Data: make([][]int, game.Height)}
 	history := &Grid{Data: make([][]int, game.Height)}
@@ -299,7 +308,22 @@ func (game *Game) Init() {
 	}
 
 	game.History = history
+}
 
+// fill a cell with the given color
+func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
+	vector.DrawFilledRect(
+		tile,
+		float32(1),
+		float32(1),
+		float32(cellsize-1),
+		float32(cellsize-1),
+		col, false,
+	)
+}
+
+// prepare tile images
+func (game *Game) InitTiles() {
 	game.Black = color.RGBA{0, 0, 0, 0xff}
 	game.White = color.RGBA{200, 200, 200, 0xff}
 	game.Grey = color.RGBA{128, 128, 128, 0xff}
@@ -308,8 +332,27 @@ func (game *Game) Init() {
 	if game.Invert {
 		game.White = color.RGBA{0, 0, 0, 0xff}
 		game.Black = color.RGBA{200, 200, 200, 0xff}
-		game.Beige = color.RGBA{0x8b, 0x1a, 0x1a, 0xff}
+		//game.Beige = color.RGBA{0x8b, 0x1a, 0x1a, 0xff}
+		game.Beige = color.RGBA{0x30, 0x1c, 0x11, 0xff}
 	}
+
+	game.Tiles.Beige = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.Black = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.White = ebiten.NewImage(game.Cellsize, game.Cellsize)
+
+	cellsize := game.ScreenWidth / game.Cellsize
+	FillCell(game.Tiles.Beige, cellsize, game.Beige)
+	FillCell(game.Tiles.Black, cellsize, game.Black)
+	FillCell(game.Tiles.White, cellsize, game.White)
+}
+
+func (game *Game) Init() {
+	// setup the game
+	game.ScreenWidth = game.Cellsize * game.Width
+	game.ScreenHeight = game.Cellsize * game.Height
+
+	game.InitGrid()
+	game.InitTiles()
 
 	game.Index = 0
 }
@@ -347,7 +390,9 @@ func main() {
 	pflag.IntVarP(&game.Density, "density", "D", 10, "density of random cells")
 	pflag.StringVarP(&rule, "rule", "r", "B3/S23", "game rule")
 	pflag.BoolVarP(&showversion, "version", "v", false, "show version")
+	pflag.BoolVarP(&game.Paused, "paused", "p", false, "do not start simulation (use space to start)")
 	pflag.BoolVarP(&game.Debug, "debug", "d", false, "show debug info")
+	pflag.BoolVarP(&game.NoGrid, "nogrid", "n", false, "do not draw grid lines")
 	pflag.BoolVarP(&game.Empty, "empty", "e", false, "start with an empty screen")
 	pflag.BoolVarP(&game.Invert, "invert", "i", false, "invert colors (dead cell: black)")
 	pflag.BoolVarP(&game.ShowEvolution, "show-evolution", "s", false, "show evolution tracks")
