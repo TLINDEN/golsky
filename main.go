@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	VERSION = "v0.0.1"
+	VERSION = "v0.0.4"
 	Alive   = 1
 	Dead    = 0
 )
@@ -33,17 +33,18 @@ type Images struct {
 
 type Game struct {
 	Grids                             []*Grid // 2 grids: one current, one next
-	History                           *Grid
-	Index                             int // points to current grid
-	Width, Height, Cellsize, Density  int
+	History                           *Grid   // holds state of past dead cells for evolution tracks
+	Index                             int     // points to current grid
+	Width, Height, Cellsize, Density  int     // measurements
 	ScreenWidth, ScreenHeight         int
-	Generations                       int
+	Generations                       int // Stats
 	Black, White, Grey, Beige         color.RGBA
-	Speed                             int
-	Debug, Paused, Empty, Invert      bool
-	ShowEvolution, NoGrid, RunOneStep bool
-	Rule                              *Rule
-	Tiles                             Images
+	TPG                               int    // ticks per generation/game speed, 1==max
+	TicksElapsed                      int    // tick counter for game speed
+	Debug, Paused, Empty, Invert      bool   // game modi
+	ShowEvolution, NoGrid, RunOneStep bool   // flags
+	Rule                              *Rule  // which rule to use, default: B3/S23
+	Tiles                             Images // pre-computed tiles for dead and alife cells
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -81,10 +82,20 @@ func Contains[E comparable](s []E, v E) bool {
 	return false
 }
 
+// Update all cells according to the current rule
 func (game *Game) UpdateCells() {
-	// compute cells
-	next := game.Index ^ 1 // next grid index, we just xor 0|1 to 1|0
+	// count ticks so we know when to actually run
+	game.TicksElapsed++
 
+	if game.TPG > game.TicksElapsed {
+		// need to sleep a little more
+		return
+	}
+
+	// next grid index, we just xor 0|1 to 1|0
+	next := game.Index ^ 1
+
+	// compute life status of cells
 	for y := 0; y < game.Height; y++ {
 		for x := 0; x < game.Width; x++ {
 			state := game.Grids[game.Index].Data[y][x] // 0|1 == dead or alive
@@ -105,12 +116,16 @@ func (game *Game) UpdateCells() {
 	// switch grid for rendering
 	game.Index ^= 1
 
-	// global counter
+	// global stats counter
 	game.Generations++
 
 	if game.RunOneStep {
+		// setp-wise mode, halt the game
 		game.RunOneStep = false
 	}
+
+	// reset speed counter
+	game.TicksElapsed = 0
 }
 
 // a GOL rule
@@ -178,34 +193,29 @@ func (game *Game) CheckInput() {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
-		if game.Speed > 1 {
-			game.Speed--
-			ebiten.SetTPS(game.Speed)
+		if game.TPG < 120 {
+			game.TPG++
 		}
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
-		if game.Speed < 120 {
-			game.Speed++
-			ebiten.SetTPS(game.Speed)
+		if game.TPG > 1 {
+			game.TPG--
 		}
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
-		switch {
-		case game.Speed > 5:
-			game.Speed -= 5
-		case game.Speed <= 5:
-			game.Speed = 1
+		if game.TPG <= 115 {
+			game.TPG += 5
 		}
-
-		ebiten.SetTPS(game.Speed)
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyPageUp) {
-		if game.Speed <= 115 {
-			game.Speed += 5
-			ebiten.SetTPS(game.Speed)
+		switch {
+		case game.TPG > 5:
+			game.TPG -= 5
+		case game.TPG <= 5:
+			game.TPG = 1
 		}
 	}
 
@@ -277,8 +287,8 @@ func (game *Game) Draw(screen *ebiten.Image) {
 
 		ebitenutil.DebugPrint(
 			screen,
-			fmt.Sprintf("FPS: %d, Generations: %d   %s",
-				game.Speed, game.Generations, paused),
+			fmt.Sprintf("FPS: %d, TPG: %d, Generations: %d   %s",
+				game.Speed, game.TPG, game.Generations, paused),
 		)
 	}
 }
@@ -355,6 +365,7 @@ func (game *Game) Init() {
 	game.InitTiles()
 
 	game.Index = 0
+	game.TicksElapsed = 0
 }
 
 // count the living neighbors of a cell
@@ -386,9 +397,11 @@ func main() {
 	pflag.IntVarP(&game.Width, "width", "W", 40, "grid width in cells")
 	pflag.IntVarP(&game.Height, "height", "H", 40, "grid height in cells")
 	pflag.IntVarP(&game.Cellsize, "cellsize", "c", 8, "cell size in pixels")
-	pflag.IntVarP(&game.Speed, "tps", "t", 60, "game speed in ticks per second")
 	pflag.IntVarP(&game.Density, "density", "D", 10, "density of random cells")
+	pflag.IntVarP(&game.TPG, "ticks-per-generation", "t", 1, "game speed: the higher the slower (default: 1)")
+
 	pflag.StringVarP(&rule, "rule", "r", "B3/S23", "game rule")
+
 	pflag.BoolVarP(&showversion, "version", "v", false, "show version")
 	pflag.BoolVarP(&game.Paused, "paused", "p", false, "do not start simulation (use space to start)")
 	pflag.BoolVarP(&game.Debug, "debug", "d", false, "show debug info")
@@ -406,14 +419,12 @@ func main() {
 
 	game.Rule = ParseGameRule(rule)
 
-	repr.Print(game.Rule.Birth)
-	repr.Print(game.Rule.Death)
+	repr.Print(game.TPG)
 	game.Init()
 
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowTitle("Game of life")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetTPS(game.Speed)
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
