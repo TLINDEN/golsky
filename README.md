@@ -4,6 +4,10 @@ I wanted to play around a little bit with GOL in golang and here's the
 result. It's a simple game using
 [ebitengine](https://github.com/hajimehoshi/ebiten/).
 
+John Conway himself: https://youtu.be/R9Plq-D1gEk?si=yYxs77e9yXxeSNbL
+
+Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
+
 # Build and install
 
 Just execute: `go build .` and use the resulting executable.
