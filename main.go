@@ -42,16 +42,18 @@ type Game struct {
 	ScreenWidth, ScreenHeight         int
 	Generations                       int // Stats
 	Black, White, Grey, Beige         color.RGBA
-	TPG                               int      // ticks per generation/game speed, 1==max
-	TicksElapsed                      int      // tick counter for game speed
-	Debug, Paused, Empty, Invert      bool     // game modi
-	ShowEvolution, NoGrid, RunOneStep bool     // flags
-	Rule                              *Rule    // which rule to use, default: B3/S23
-	Tiles                             Images   // pre-computed tiles for dead and alife cells
-	RLE                               *rle.RLE // loaded GOL pattern from RLE file
-	Camera                            Camera
-	World                             *ebiten.Image
-	WheelTurned                       bool
+	TPG                               int           // ticks per generation/game speed, 1==max
+	TicksElapsed                      int           // tick counter for game speed
+	Debug, Paused, Empty, Invert      bool          // game modi
+	ShowEvolution, NoGrid, RunOneStep bool          // flags
+	Rule                              *Rule         // which rule to use, default: B3/S23
+	Tiles                             Images        // pre-computed tiles for dead and alife cells
+	RLE                               *rle.RLE      // loaded GOL pattern from RLE file
+	Camera                            Camera        // for zoom+move
+	World                             *ebiten.Image // actual image we render to
+	WheelTurned                       bool          // when user turns wheel multiple times, zoom faster
+	Dragging                          bool          // middle mouse is pressed, move canvas
+	LastCursorPos                     []int
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -216,36 +218,55 @@ func (game *Game) CheckInput() {
 			game.RunOneStep = true
 		}
 	}
+}
 
-	// Pane
-	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+// Check dragging input.  move the canvas with the  mouse while pressing
+// the middle mouse button, zoom in and out using the wheel.
+func (game *Game) CheckDraggingInput() {
+	// move canvas
+	if game.Dragging && !ebiten.IsMouseButtonPressed(ebiten.MouseButton1) {
+		// release
+		game.Dragging = false
+	}
+
+	if !game.Dragging && ebiten.IsMouseButtonPressed(ebiten.MouseButton1) {
+		// start dragging
+		game.Dragging = true
+		game.LastCursorPos[0], game.LastCursorPos[1] = ebiten.CursorPosition()
+	}
+
+	if game.Dragging {
+		x, y := ebiten.CursorPosition()
+
+		if x != game.LastCursorPos[0] || y != game.LastCursorPos[1] {
+			// actually drag by mouse cursor pos diff to last cursor pos
+			game.Camera.Position[0] -= float64(x - game.LastCursorPos[0])
+			game.Camera.Position[1] -= float64(y - game.LastCursorPos[1])
+		}
+
+		game.LastCursorPos[0], game.LastCursorPos[1] = ebiten.CursorPosition()
+	}
+
+	// also support the arrow keys to move the canvas
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 		game.Camera.Position[0] -= 1
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 		game.Camera.Position[0] += 1
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		game.Camera.Position[1] -= 1
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		game.Camera.Position[1] += 1
 	}
 
 	// Zoom
 	_, dy := ebiten.Wheel()
-	if ebiten.IsKeyPressed(ebiten.KeyO) {
-		if game.Camera.ZoomFactor > -2400 {
-			game.Camera.ZoomFactor -= 1
-		}
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyI) {
-		if game.Camera.ZoomFactor < 2400 {
-			game.Camera.ZoomFactor += 1
-		}
-	}
-
 	step := 1
+
 	if game.WheelTurned {
+		// if keep scrolling the wheel, zoom faster
 		step = 50
 	} else {
 		game.WheelTurned = false
@@ -271,6 +292,7 @@ func (game *Game) CheckInput() {
 
 func (game *Game) Update() error {
 	game.CheckInput()
+	game.CheckDraggingInput()
 
 	if !game.Paused || game.RunOneStep {
 		game.UpdateCells()
@@ -421,7 +443,6 @@ func (game *Game) InitTiles() {
 	if game.Invert {
 		game.White = color.RGBA{0, 0, 0, 0xff}
 		game.Black = color.RGBA{200, 200, 200, 0xff}
-		//game.Beige = color.RGBA{0x8b, 0x1a, 0x1a, 0xff}
 		game.Beige = color.RGBA{0x30, 0x1c, 0x11, 0xff}
 	}
 
@@ -455,6 +476,8 @@ func (game *Game) Init() {
 
 	game.Index = 0
 	game.TicksElapsed = 0
+
+	game.LastCursorPos = make([]int, 2)
 }
 
 // count the living neighbors of a cell

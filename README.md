@@ -33,15 +33,16 @@ Usage of ./gameoflife:
 
 While it runs, there are a couple of commands you can use:
 
-* left mouse click: set a cell to alife
+* left mouse click: set a cell to alife (also pauses the game)
 * right mouse click: set a cell to dead
 * space: pause or resume the game
 * while game is paused: press n to forward one step
 * q: quit
-* up arrow: speed up
-* down arrow: slow down
-* page up: speed up more
-* page down: slow down more
+* page up: speed up
+* page down: slow down
+* Mouse wheel: zoom in or out
+* move mouse while middle mouse button pressed: move canvas
+* escape: reset to 1:1 zoom
 
 # Report bugs
 
