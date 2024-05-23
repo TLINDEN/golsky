@@ -37,12 +37,13 @@ While it runs, there are a couple of commands you can use:
 * right mouse click: set a cell to dead
 * space: pause or resume the game
 * while game is paused: press n to forward one step
-* q: quit
 * page up: speed up
 * page down: slow down
 * Mouse wheel: zoom in or out
 * move mouse while middle mouse button pressed: move canvas
 * escape: reset to 1:1 zoom
+* s: save game state to file (can be loaded with -l)
+* q: quit
 
 # Report bugs
 

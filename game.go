@@ -38,7 +38,8 @@ type Game struct {
 	World                             *ebiten.Image // actual image we render to
 	WheelTurned                       bool          // when user turns wheel multiple times, zoom faster
 	Dragging                          bool          // middle mouse is pressed, move canvas
-	LastCursorPos                     []int
+	LastCursorPos                     []int         // used to check if the user is dragging
+	Statefile                         string        // load game state from it if non-nil
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -325,13 +326,50 @@ func (game *Game) InitPattern() {
 }
 
 // initialize playing field/grid
-func (game *Game) InitGrid() {
-	grid := &Grid{Data: make([][]int, game.Height)}
+func (game *Game) InitGrid(grid *Grid) {
+	if grid != nil {
+		// use pre-loaded grid
+		game.Grids = []*Grid{
+			grid,
+			NewGrid(grid.Width, grid.Height),
+		}
+
+		game.History = NewGrid(grid.Width, grid.Height)
+
+		return
+	}
+
+	grida := NewGrid(game.Width, game.Height)
+	gridb := NewGrid(game.Width, game.Height)
+	history := NewGrid(game.Width, game.Height)
+
+	for y := 0; y < game.Height; y++ {
+		if !game.Empty {
+			for x := 0; x < game.Width; x++ {
+				if rand.Intn(game.Density) == 1 {
+					history.Data[y][x] = 1
+					grida.Data[y][x] = 1
+				}
+			}
+		}
+	}
+
+	game.Grids = []*Grid{
+		grida,
+		gridb,
+	}
+
+	game.History = history
+}
+
+func (game *Game) _InitGrid(grid *Grid) {
+
+	grida := &Grid{Data: make([][]int, game.Height)}
 	gridb := &Grid{Data: make([][]int, game.Height)}
 	history := &Grid{Data: make([][]int, game.Height)}
 
 	for y := 0; y < game.Height; y++ {
-		grid.Data[y] = make([]int, game.Width)
+		grida.Data[y] = make([]int, game.Width)
 		gridb.Data[y] = make([]int, game.Width)
 		history.Data[y] = make([]int, game.Width)
 
@@ -339,14 +377,14 @@ func (game *Game) InitGrid() {
 			for x := 0; x < game.Width; x++ {
 				if rand.Intn(game.Density) == 1 {
 					history.Data[y][x] = 1
-					grid.Data[y][x] = 1
+					grida.Data[y][x] = 1
 				}
 			}
 		}
 	}
 
 	game.Grids = []*Grid{
-		grid,
+		grida,
 		gridb,
 	}
 
@@ -378,6 +416,20 @@ func (game *Game) InitTiles() {
 
 func (game *Game) Init() {
 	// setup the game
+	var grid *Grid
+
+	if game.Statefile != "" {
+		g, err := LoadState(game.Statefile)
+		if err != nil {
+			log.Fatalf("failed to load game state: %s", err)
+		}
+
+		grid = g
+
+		game.Width = grid.Width
+		game.Height = grid.Height
+	}
+
 	game.ScreenWidth = game.Cellsize * game.Width
 	game.ScreenHeight = game.Cellsize * game.Height
 
@@ -390,7 +442,7 @@ func (game *Game) Init() {
 
 	game.World = ebiten.NewImage(game.ScreenWidth, game.ScreenHeight)
 
-	game.InitGrid()
+	game.InitGrid(grid)
 	game.InitPattern()
 	game.InitTiles()
 

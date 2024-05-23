@@ -15,6 +15,31 @@ type Grid struct {
 	Width, Height int
 }
 
+// Create new empty grid and allocate Data according to provided dimensions
+func NewGrid(width, height int) *Grid {
+	grid := &Grid{
+		Height: height,
+		Width:  width,
+		Data:   make([][]int, height),
+	}
+
+	for y := 0; y < height; y++ {
+		grid.Data[y] = make([]int, width)
+	}
+
+	return grid
+}
+
+func (grid *Grid) Clone() *Grid {
+	newgrid := &Grid{}
+
+	newgrid.Width = grid.Width
+	newgrid.Height = grid.Height
+	newgrid.Data = grid.Data
+
+	return newgrid
+}
+
 func GetFilename(generations int64) string {
 	now := time.Now()
 	return fmt.Sprintf("dump-%s-%d.gol", now.Format("20060102150405"), generations)
@@ -75,16 +100,18 @@ func LoadState(filename string) (*Grid, error) {
 	// sanity check the grid
 	explen := 0
 	rows := 0
-	first := false
+	first := true
 	for _, row := range grid.Data {
 		length := len(row)
 
 		if first {
 			explen = length
+			first = false
 		}
 
 		if explen != length {
-			return nil, errors.New("all rows must be in the same length")
+			return nil, fmt.Errorf(fmt.Sprintf("all rows must be in the same length, got: %d, expected: %d",
+				length, explen))
 		}
 
 		rows++

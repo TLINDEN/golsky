@@ -50,7 +50,8 @@ func main() {
 		"game speed: the higher the slower (default: 10)")
 
 	pflag.StringVarP(&rule, "rule", "r", "B3/S23", "game rule")
-	pflag.StringVarP(&rlefile, "rlefile", "f", "", "RLE pattern file")
+	pflag.StringVarP(&rlefile, "rle-file", "f", "", "RLE pattern file")
+	pflag.StringVarP(&game.Statefile, "load-state-file", "l", "", "game state file")
 
 	pflag.BoolVarP(&showversion, "version", "v", false, "show version")
 	pflag.BoolVarP(&game.Paused, "paused", "p", false, "do not start simulation (use space to start)")
@@ -73,6 +74,8 @@ func main() {
 		if game.RLE.Width > game.Width || game.RLE.Height > game.Height {
 			game.Width = game.RLE.Width * 2
 			game.Height = game.RLE.Height * 2
+			fmt.Printf("rlew: %d, rleh: %d, w: %d, h: %d\n",
+				game.RLE.Width, game.RLE.Height, game.Width, game.Height)
 		}
 
 		// RLE needs an empty grid
