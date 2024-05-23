@@ -1,6 +1,6 @@
 # golsky - Conway's game of life written in GO
 
-![Golsky Logo](https://github.com/TLINDEN/golsky/blob/main/.github/assets/golsky.png)
+![Golsky Logo](https://github.com/TLINDEN/golsky/blob/main/.github/assets/golskylogo.png)
 
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/tlinden/golsky/blob/master/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tlinden/golsky)](https://goreportcard.com/report/github.com/tlinden/golsky) 
