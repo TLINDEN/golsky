@@ -11,35 +11,36 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"github.com/tlinden/gameoflife/rle"
+	"github.com/tlinden/golsky/rle"
 	"golang.org/x/image/math/f64"
 )
 
 type Images struct {
-	Black, White, Beige *ebiten.Image
+	Black, White, Age1, Age2, Age3, Age4, Old *ebiten.Image
 }
 
 type Game struct {
-	Grids                             []*Grid // 2 grids: one current, one next
-	History                           *Grid   // holds state of past dead cells for evolution tracks
-	Index                             int     // points to current grid
-	Width, Height, Cellsize, Density  int     // measurements
-	ScreenWidth, ScreenHeight         int
-	Generations                       int64 // Stats
-	Black, White, Grey, Beige         color.RGBA
-	TPG                               int           // ticks per generation/game speed, 1==max
-	TicksElapsed                      int           // tick counter for game speed
-	Debug, Paused, Empty, Invert      bool          // game modi
-	ShowEvolution, NoGrid, RunOneStep bool          // flags
-	Rule                              *Rule         // which rule to use, default: B3/S23
-	Tiles                             Images        // pre-computed tiles for dead and alife cells
-	RLE                               *rle.RLE      // loaded GOL pattern from RLE file
-	Camera                            Camera        // for zoom+move
-	World                             *ebiten.Image // actual image we render to
-	WheelTurned                       bool          // when user turns wheel multiple times, zoom faster
-	Dragging                          bool          // middle mouse is pressed, move canvas
-	LastCursorPos                     []int         // used to check if the user is dragging
-	Statefile                         string        // load game state from it if non-nil
+	Grids                                      []*Grid // 2 grids: one current, one next
+	History                                    *Grid   // holds state of past dead cells for evolution tracks
+	Index                                      int     // points to current grid
+	Width, Height, Cellsize, Density           int     // measurements
+	ScreenWidth, ScreenHeight                  int
+	Generations                                int64 // Stats
+	Black, White, Grey, Old                    color.RGBA
+	AgeColor1, AgeColor2, AgeColor3, AgeColor4 color.RGBA
+	TPG                                        int           // ticks per generation/game speed, 1==max
+	TicksElapsed                               int           // tick counter for game speed
+	Debug, Paused, Empty, Invert               bool          // game modi
+	ShowEvolution, NoGrid, RunOneStep          bool          // flags
+	Rule                                       *Rule         // which rule to use, default: B3/S23
+	Tiles                                      Images        // pre-computed tiles for dead and alife cells
+	RLE                                        *rle.RLE      // loaded GOL pattern from RLE file
+	Camera                                     Camera        // for zoom+move
+	World                                      *ebiten.Image // actual image we render to
+	WheelTurned                                bool          // when user turns wheel multiple times, zoom faster
+	Dragging                                   bool          // middle mouse is pressed, move canvas
+	LastCursorPos                              []int         // used to check if the user is dragging
+	Statefile                                  string        // load game state from it if non-nil
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -91,7 +92,10 @@ func (game *Game) UpdateCells() {
 			// change state of current cell in next grid
 			game.Grids[next].Data[y][x] = nextstate
 
-			if state == Alive && nextstate == Dead {
+			// set history  to current generation so we  can infer the
+			// age of the cell's state  during rendering and use it to
+			// deduce the color to use if evolution tracking is enabled
+			if state != nextstate {
 				game.History.Data[y][x] = game.Generations
 			}
 		}
@@ -272,13 +276,27 @@ func (game *Game) Draw(screen *ebiten.Image) {
 			op.GeoM.Reset()
 			op.GeoM.Translate(float64(x*game.Cellsize), float64(y*game.Cellsize))
 
+			age := game.Generations - game.History.Data[y][x]
+
 			switch game.Grids[game.Index].Data[y][x] {
 			case 1:
-
-				game.World.DrawImage(game.Tiles.Black, op)
+				if age > 50 && game.ShowEvolution {
+					game.World.DrawImage(game.Tiles.Old, op)
+				} else {
+					game.World.DrawImage(game.Tiles.Black, op)
+				}
 			case 0:
-				if game.History.Data[y][x] == 1 && game.ShowEvolution {
-					game.World.DrawImage(game.Tiles.Beige, op)
+				if game.History.Data[y][x] > 1 && game.ShowEvolution {
+					switch {
+					case age < 10:
+						game.World.DrawImage(game.Tiles.Age1, op)
+					case age < 20:
+						game.World.DrawImage(game.Tiles.Age2, op)
+					case age < 30:
+						game.World.DrawImage(game.Tiles.Age3, op)
+					default:
+						game.World.DrawImage(game.Tiles.Age4, op)
+					}
 				} else {
 					game.World.DrawImage(game.Tiles.White, op)
 				}
@@ -365,25 +383,43 @@ func (game *Game) InitGrid(grid *Grid) {
 
 // prepare tile images
 func (game *Game) InitTiles() {
+	game.Grey = color.RGBA{128, 128, 128, 0xff}
+	game.Old = color.RGBA{255, 30, 30, 0xff}
+
 	game.Black = color.RGBA{0, 0, 0, 0xff}
 	game.White = color.RGBA{200, 200, 200, 0xff}
-	game.Grey = color.RGBA{128, 128, 128, 0xff}
-	game.Beige = color.RGBA{0xff, 0xf8, 0xdc, 0xff}
+	game.AgeColor1 = color.RGBA{255, 195, 97, 0xff} // FIXME: use slice!
+	game.AgeColor2 = color.RGBA{255, 211, 140, 0xff}
+	game.AgeColor3 = color.RGBA{255, 227, 181, 0xff}
+	game.AgeColor4 = color.RGBA{255, 240, 224, 0xff}
 
 	if game.Invert {
 		game.White = color.RGBA{0, 0, 0, 0xff}
 		game.Black = color.RGBA{200, 200, 200, 0xff}
-		game.Beige = color.RGBA{0x30, 0x1c, 0x11, 0xff}
+
+		game.AgeColor1 = color.RGBA{82, 38, 0, 0xff}
+		game.AgeColor2 = color.RGBA{66, 35, 0, 0xff}
+		game.AgeColor3 = color.RGBA{43, 27, 0, 0xff}
+		game.AgeColor4 = color.RGBA{25, 17, 0, 0xff}
 	}
 
-	game.Tiles.Beige = ebiten.NewImage(game.Cellsize, game.Cellsize)
 	game.Tiles.Black = ebiten.NewImage(game.Cellsize, game.Cellsize)
 	game.Tiles.White = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.Old = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.Age1 = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.Age2 = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.Age3 = ebiten.NewImage(game.Cellsize, game.Cellsize)
+	game.Tiles.Age4 = ebiten.NewImage(game.Cellsize, game.Cellsize)
 
 	cellsize := game.ScreenWidth / game.Cellsize
-	FillCell(game.Tiles.Beige, cellsize, game.Beige)
+
 	FillCell(game.Tiles.Black, cellsize, game.Black)
 	FillCell(game.Tiles.White, cellsize, game.White)
+	FillCell(game.Tiles.Old, cellsize, game.Old)
+	FillCell(game.Tiles.Age1, cellsize, game.AgeColor1)
+	FillCell(game.Tiles.Age2, cellsize, game.AgeColor2)
+	FillCell(game.Tiles.Age3, cellsize, game.AgeColor3)
+	FillCell(game.Tiles.Age4, cellsize, game.AgeColor4)
 }
 
 func (game *Game) Init() {

@@ -1,13 +1,21 @@
-# Conway's game of life
+# golsky - Conway's game of life written in GO
 
-I wanted to play around a little bit with GOL in golang and here's the
-result. It's a simple game using
+![Golsky Logo](https://github.com/TLINDEN/golsky/blob/main/.github/assets/golsky.png)
+
+[![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/tlinden/golsky/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tlinden/golsky)](https://goreportcard.com/report/github.com/tlinden/golsky) 
+
+I wanted to play around a little bit with [**Conways Game of
+Life**](https://conwaylife.com/)
+in golang and here's the  result. It's a simple game using
 [ebitengine](https://github.com/hajimehoshi/ebiten/).
 
 # Features
 
 * flexible parameters as grid and cell size
 * colors can be inverted
+* evolution  tracks can be shown,  with age the cells  color fades and
+  old life cells will be drawn in red
 * game grid lines can be enabled or disabled
 * game speed can be adjusted on startup and in-game
 * you can zoom in and out of the canvas and move it around
@@ -19,7 +27,12 @@ result. It's a simple game using
 * you can paint your own patterns in the game
 * the game can also be started with an empty grid, which is easier to paint patterns
 
-# Build and install
+# Install
+
+In the github releases page you can find ready to use binaries for
+your OS. Just download the one you need and use it.
+
+# Build from source
 
 Just execute: `go build .` and use the resulting executable.
 
@@ -30,7 +43,7 @@ You'll need the golang toolchain.
 The game has a couple of commandline options:
 
 ```default
-Usage of ./gameoflife:
+Usage of ./golsky:
   -c, --cellsize int               cell size in pixels (default 8)
   -d, --debug                      show debug info
   -D, --density int                density of random cells (default 10)
@@ -64,7 +77,7 @@ While it runs, there are a couple of commands you can use:
 
 # Report bugs
 
-[Please open an issue](https://github.com/TLINDEN/gameoflife/issues). Thanks!
+[Please open an issue](https://github.com/TLINDEN/golsky/issues). Thanks!
 
 # License
 

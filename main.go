@@ -5,14 +5,14 @@ import (
 	"log"
 	"os"
 
-	"github.com/tlinden/gameoflife/rle"
+	"github.com/tlinden/golsky/rle"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/spf13/pflag"
 )
 
 const (
-	VERSION = "v0.0.4"
+	VERSION = "v0.0.5"
 	Alive   = 1
 	Dead    = 0
 )
@@ -64,7 +64,7 @@ func main() {
 	pflag.Parse()
 
 	if showversion {
-		fmt.Printf("This is gameoflife version %s\n", VERSION)
+		fmt.Printf("This is golsky version %s\n", VERSION)
 		os.Exit(0)
 	}
 

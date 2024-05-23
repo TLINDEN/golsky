@@ -1,4 +1,4 @@
-module github.com/tlinden/gameoflife
+module github.com/tlinden/golsky
 
 go 1.22
 
