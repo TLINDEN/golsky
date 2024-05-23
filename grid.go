@@ -11,7 +11,7 @@ import (
 )
 
 type Grid struct {
-	Data          [][]int
+	Data          [][]int64
 	Width, Height int
 }
 
@@ -20,11 +20,11 @@ func NewGrid(width, height int) *Grid {
 	grid := &Grid{
 		Height: height,
 		Width:  width,
-		Data:   make([][]int, height),
+		Data:   make([][]int64, height),
 	}
 
 	for y := 0; y < height; y++ {
-		grid.Data[y] = make([]int, width)
+		grid.Data[y] = make([]int64, width)
 	}
 
 	return grid
@@ -54,7 +54,7 @@ func (grid *Grid) SaveState(filename string) error {
 
 	for y, _ := range grid.Data {
 		for _, cell := range grid.Data[y] {
-			_, err := file.WriteString(strconv.Itoa(cell))
+			_, err := file.WriteString(strconv.FormatInt(cell, 10))
 			if err != nil {
 				return fmt.Errorf("failed to write to state file: %w", err)
 			}
@@ -79,10 +79,10 @@ func LoadState(filename string) (*Grid, error) {
 
 	for scanner.Scan() {
 		items := strings.Split(scanner.Text(), "")
-		row := make([]int, len(items))
+		row := make([]int64, len(items))
 
 		for idx, item := range items {
-			num, err := strconv.Atoi(item)
+			num, err := strconv.ParseInt(item, 10, 64)
 			if err != nil {
 				return nil, err
 			}

@@ -46,8 +46,8 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return game.ScreenWidth, game.ScreenHeight
 }
 
-func (game *Game) CheckRule(state, neighbors int) int {
-	var nextstate int
+func (game *Game) CheckRule(state int64, neighbors int64) int64 {
+	var nextstate int64
 
 	// The standard Game of Life is symbolized in rule-string notation
 	// as B3/S23 (23/3 here).  A cell  is born if it has exactly three
@@ -56,11 +56,11 @@ func (game *Game) CheckRule(state, neighbors int) int {
 	// what is required for a dead cell to be born.
 
 	if state == 0 && Contains(game.Rule.Birth, neighbors) {
-		nextstate = 1
+		nextstate = Alive
 	} else if state == 1 && Contains(game.Rule.Death, neighbors) {
-		nextstate = 1
+		nextstate = Alive
 	} else {
-		nextstate = 0
+		nextstate = Dead
 	}
 
 	return nextstate
@@ -91,8 +91,8 @@ func (game *Game) UpdateCells() {
 			// change state of current cell in next grid
 			game.Grids[next].Data[y][x] = nextstate
 
-			if state == 1 {
-				game.History.Data[y][x] = 1
+			if state == Alive && nextstate == Dead {
+				game.History.Data[y][x] = game.Generations
 			}
 		}
 	}
@@ -242,7 +242,7 @@ func (game *Game) Update() error {
 }
 
 // set a cell to alive or dead
-func (game *Game) ToggleCellOnCursorPos(alive int) {
+func (game *Game) ToggleCellOnCursorPos(alive int64) {
 	// use cursor pos relative to the world
 	worldX, worldY := game.Camera.ScreenToWorld(ebiten.CursorPosition())
 	x := int(worldX) / game.Cellsize
@@ -363,35 +363,6 @@ func (game *Game) InitGrid(grid *Grid) {
 	game.History = history
 }
 
-func (game *Game) _InitGrid(grid *Grid) {
-
-	grida := &Grid{Data: make([][]int, game.Height)}
-	gridb := &Grid{Data: make([][]int, game.Height)}
-	history := &Grid{Data: make([][]int, game.Height)}
-
-	for y := 0; y < game.Height; y++ {
-		grida.Data[y] = make([]int, game.Width)
-		gridb.Data[y] = make([]int, game.Width)
-		history.Data[y] = make([]int, game.Width)
-
-		if !game.Empty {
-			for x := 0; x < game.Width; x++ {
-				if rand.Intn(game.Density) == 1 {
-					history.Data[y][x] = 1
-					grida.Data[y][x] = 1
-				}
-			}
-		}
-	}
-
-	game.Grids = []*Grid{
-		grida,
-		gridb,
-	}
-
-	game.History = history
-}
-
 // prepare tile images
 func (game *Game) InitTiles() {
 	game.Black = color.RGBA{0, 0, 0, 0xff}
@@ -454,8 +425,8 @@ func (game *Game) Init() {
 }
 
 // count the living neighbors of a cell
-func (game *Game) CountNeighbors(x, y int) int {
-	sum := 0
+func (game *Game) CountNeighbors(x, y int) int64 {
+	var sum int64
 
 	// so we look ad all 8 neighbors surrounding us. In case we are on
 	// an edge, then  we'll look at the neighbor on  the other side of
