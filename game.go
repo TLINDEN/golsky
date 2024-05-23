@@ -243,9 +243,10 @@ func (game *Game) Update() error {
 
 // set a cell to alive or dead
 func (game *Game) ToggleCellOnCursorPos(alive int) {
-	xPX, yPX := ebiten.CursorPosition()
-	x := xPX / game.Cellsize
-	y := yPX / game.Cellsize
+	// use cursor pos relative to the world
+	worldX, worldY := game.Camera.ScreenToWorld(ebiten.CursorPosition())
+	x := int(worldX) / game.Cellsize
+	y := int(worldY) / game.Cellsize
 
 	//fmt.Printf("cell at %d,%d\n", x, y)
 
