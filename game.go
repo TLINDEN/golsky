@@ -306,8 +306,6 @@ func (game *Game) Draw(screen *ebiten.Image) {
 
 	game.Camera.Render(game.World, screen)
 
-	//worldX, worldY := game.Camera.ScreenToWorld(ebiten.CursorPosition())
-
 	if game.Debug {
 		paused := ""
 		if game.Paused {
