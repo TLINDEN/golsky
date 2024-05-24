@@ -116,6 +116,12 @@ func (game *Game) UpdateCells() {
 	game.TicksElapsed = 0
 }
 
+func (game *Game) Reset() {
+	game.Paused = true
+	game.InitGrid(nil)
+	game.Paused = false
+}
+
 // check user input
 func (game *Game) CheckInput() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
@@ -150,6 +156,10 @@ func (game *Game) CheckInput() {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
 		game.SaveState()
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		game.Reset()
 	}
 
 	if game.Paused {
@@ -349,6 +359,31 @@ func (game *Game) InitPattern() {
 }
 
 // initialize playing field/grid
+func (game *Game) _InitGrid(grid *Grid) {
+	if grid != nil {
+		// use pre-loaded grid
+		game.Grids = []*Grid{
+			grid,
+			NewGrid(grid.Width, grid.Height),
+		}
+
+		game.History = NewGrid(grid.Width, grid.Height)
+
+		return
+	}
+
+	grida := NewGrid(game.Width, game.Height)
+
+	grida.FillRandom(game)
+
+	game.Grids = []*Grid{
+		grida,
+		NewGrid(grida.Width, grida.Height),
+	}
+
+	game.History = grida.Clone()
+}
+
 func (game *Game) InitGrid(grid *Grid) {
 	if grid != nil {
 		// use pre-loaded grid

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -38,6 +39,26 @@ func (grid *Grid) Clone() *Grid {
 	newgrid.Data = grid.Data
 
 	return newgrid
+}
+
+func (grid *Grid) Clear() {
+	for y := range grid.Data {
+		for x := range grid.Data[y] {
+			grid.Data[y][x] = 0
+		}
+	}
+}
+
+func (grid *Grid) FillRandom(game *Game) {
+	if !game.Empty {
+		for y := range grid.Data {
+			for x := range grid.Data[y] {
+				if rand.Intn(game.Density) == 1 {
+					grid.Data[y][x] = 1
+				}
+			}
+		}
+	}
 }
 
 func GetFilename(generations int64) string {

@@ -85,3 +85,12 @@ show-versions: buildlocal
 
 # lint:
 # 	golangci-lint run -p bugs -p unused
+
+buildwasm:
+	env GOOS=js GOARCH=wasm go build -o $(tool).wasm $(LDFLAGS) .
+
+zipwasm:
+	zip -r openquell-$(SHORTVERSION).zip index.html $(tool).wasm wasm_exec.js
+
+wasm: buildwasm zipwasm
+	@ls -l $(tool)-$(SHORTVERSION).zip
