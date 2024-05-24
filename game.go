@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"log"
 	"math/rand"
@@ -41,6 +42,10 @@ type Game struct {
 	Dragging                                   bool          // middle mouse is pressed, move canvas
 	LastCursorPos                              []int         // used to check if the user is dragging
 	Statefile                                  string        // load game state from it if non-nil
+	Markmode                                   bool          // enabled with 'c'
+	MarkTaken                                  bool          // true when mouse1 pressed
+	MarkDone                                   bool          // true when mouse1 released, copy cells between Mark+Point
+	Mark, Point                                image.Point
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -128,6 +133,15 @@ func (game *Game) CheckInput() {
 		os.Exit(0)
 	}
 
+	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+		fmt.Println("mark mode on")
+		game.Markmode = true
+	}
+
+	if game.Markmode {
+		return
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		game.Paused = !game.Paused
 	}
@@ -169,18 +183,13 @@ func (game *Game) CheckInput() {
 	}
 }
 
-func (game *Game) SaveState() {
-	filename := GetFilename(game.Generations)
-	err := game.Grids[game.Index].SaveState(filename)
-	if err != nil {
-		log.Printf("failed to save game state to %s: %s", filename, err)
-	}
-	log.Printf("saved game state to %s at generation %d\n", filename, game.Generations)
-}
-
 // Check dragging input.  move the canvas with the  mouse while pressing
 // the middle mouse button, zoom in and out using the wheel.
 func (game *Game) CheckDraggingInput() {
+	if game.Markmode {
+		return
+	}
+
 	// move canvas
 	if game.Dragging && !ebiten.IsMouseButtonPressed(ebiten.MouseButton1) {
 		// release
@@ -248,9 +257,48 @@ func (game *Game) CheckDraggingInput() {
 
 }
 
+func (game *Game) GetWorldCursorPos() image.Point {
+	worldX, worldY := game.Camera.ScreenToWorld(ebiten.CursorPosition())
+	return image.Point{
+		X: int(worldX) / game.Cellsize,
+		Y: int(worldY) / game.Cellsize,
+	}
+}
+
+func (game *Game) CheckMarkInput() {
+	if !game.Markmode {
+		return
+	}
+
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
+		if !game.MarkTaken {
+			game.Mark = game.GetWorldCursorPos()
+			game.MarkTaken = true
+			game.MarkDone = false
+		}
+
+		game.Point = game.GetWorldCursorPos()
+		fmt.Printf("Mark: %v, Current: %v\n", game.Mark, game.Point)
+	} else if inpututil.IsMouseButtonJustReleased(ebiten.MouseButton0) {
+		game.Markmode = false
+		game.MarkTaken = false
+		game.MarkDone = true
+	}
+}
+
+func (game *Game) SaveState() {
+	filename := GetFilename(game.Generations)
+	err := game.Grids[game.Index].SaveState(filename)
+	if err != nil {
+		log.Printf("failed to save game state to %s: %s", filename, err)
+	}
+	log.Printf("saved game state to %s at generation %d\n", filename, game.Generations)
+}
+
 func (game *Game) Update() error {
 	game.CheckInput()
 	game.CheckDraggingInput()
+	game.CheckMarkInput()
 
 	if !game.Paused || game.RunOneStep {
 		game.UpdateCells()
