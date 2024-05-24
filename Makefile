@@ -17,7 +17,7 @@
 #
 # no need to modify anything below
 tool      = golsky
-VERSION   = $(shell grep VERSION config.go | head -1 | cut -d '"' -f2)
+VERSION   = $(shell grep VERSION main.go | head -1 | cut -d '"' -f2)
 archs     = darwin freebsd linux windows
 PREFIX    = /usr/local
 UID       = root
@@ -69,7 +69,7 @@ buildall:
 	./mkrel.sh $(tool) $(VERSION)
 
 release: buildall
-	gh release create v$(VERSION) --generate-notes releases/*
+	gh release create $(VERSION) --generate-notes releases/*
 
 show-versions: buildlocal
 	@echo "### golsky version:"

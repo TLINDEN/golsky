@@ -45,6 +45,7 @@ for D in $DIST; do
     tarfile="releases/${tool}-${os}-${arch}-${version}.tar.gz"
     set -x
     GOOS=${os} GOARCH=${arch} go build -o ${binfile}
+    set +x
     continue
     
     mkdir -p ${tardir}
