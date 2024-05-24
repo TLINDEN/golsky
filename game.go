@@ -149,12 +149,7 @@ func (game *Game) CheckInput() {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
-		filename := GetFilename(game.Generations)
-		err := game.Grids[game.Index].SaveState(filename)
-		if err != nil {
-			log.Printf("failed to save game state to %s: %s", filename, err)
-		}
-		log.Printf("saved game state to %s at generation %d\n", filename, game.Generations)
+		game.SaveState()
 	}
 
 	if game.Paused {
@@ -162,6 +157,15 @@ func (game *Game) CheckInput() {
 			game.RunOneStep = true
 		}
 	}
+}
+
+func (game *Game) SaveState() {
+	filename := GetFilename(game.Generations)
+	err := game.Grids[game.Index].SaveState(filename)
+	if err != nil {
+		log.Printf("failed to save game state to %s: %s", filename, err)
+	}
+	log.Printf("saved game state to %s at generation %d\n", filename, game.Generations)
 }
 
 // Check dragging input.  move the canvas with the  mouse while pressing
@@ -254,8 +258,10 @@ func (game *Game) ToggleCellOnCursorPos(alive int64) {
 
 	//fmt.Printf("cell at %d,%d\n", x, y)
 
-	game.Grids[game.Index].Data[y][x] = alive
-	game.History.Data[y][x] = 1
+	if x > -1 && y > -1 {
+		game.Grids[game.Index].Data[y][x] = alive
+		game.History.Data[y][x] = 1
+	}
 }
 
 // draw the new grid state
