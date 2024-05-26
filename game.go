@@ -17,8 +17,14 @@ func NewGame(config *Config, startscene SceneName) *Game {
 		ScreenHeight: config.ScreenHeight,
 	}
 
+	// setup scene[s]
 	game.CurrentScene = startscene
 	game.Scenes[Play] = NewPlayScene(game, config)
+
+	// setup environment
+	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
+	ebiten.SetWindowTitle("golsky - conway's game of life")
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	return game
 }

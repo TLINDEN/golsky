@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/spf13/pflag"
 	"github.com/tlinden/golsky/rle"
@@ -21,6 +22,30 @@ type Config struct {
 	StateGrid                         *Grid    // a grid from a statefile
 	Wrap                              bool     // wether wraparound mode is in place or not
 	ShowVersion                       bool
+}
+
+const (
+	VERSION = "v0.0.6"
+	Alive   = 1
+	Dead    = 0
+)
+
+func GetRLE(filename string) *rle.RLE {
+	if filename == "" {
+		return nil
+	}
+
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	parsedRle, err := rle.Parse(string(content))
+	if err != nil {
+		log.Fatalf("failed to load RLE pattern file: %s", err)
+	}
+
+	return &parsedRle
 }
 
 func ParseCommandline() *Config {
