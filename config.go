@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/spf13/pflag"
 	"github.com/tlinden/golsky/rle"
 )
 
+// all the settings comming from commandline, but maybe tweaked later from the UI
 type Config struct {
 	Width, Height, Cellsize, Density  int // measurements
 	ScreenWidth, ScreenHeight         int
@@ -20,12 +20,12 @@ type Config struct {
 	Statefile                         string   // load game state from it if non-nil
 	StateGrid                         *Grid    // a grid from a statefile
 	Wrap                              bool     // wether wraparound mode is in place or not
+	ShowVersion                       bool
 }
 
 func ParseCommandline() *Config {
 	config := Config{}
 
-	showversion := false
 	var rule string
 	var rlefile string
 
@@ -41,7 +41,7 @@ func ParseCommandline() *Config {
 	pflag.StringVarP(&rlefile, "rle-file", "f", "", "RLE pattern file")
 	pflag.StringVarP(&config.Statefile, "load-state-file", "l", "", "game state file")
 
-	pflag.BoolVarP(&showversion, "version", "v", false, "show version")
+	pflag.BoolVarP(&config.ShowVersion, "version", "v", false, "show version")
 	pflag.BoolVarP(&config.Paused, "paused", "p", false, "do not start simulation (use space to start)")
 	pflag.BoolVarP(&config.Debug, "debug", "d", false, "show debug info")
 	pflag.BoolVarP(&config.NoGrid, "nogrid", "n", false, "do not draw grid lines")
@@ -51,11 +51,6 @@ func ParseCommandline() *Config {
 	pflag.BoolVarP(&config.Wrap, "wrap-around", "w", false, "wrap around grid mode")
 
 	pflag.Parse()
-
-	if showversion {
-		fmt.Printf("This is golsky version %s\n", VERSION)
-		os.Exit(0)
-	}
 
 	// check if we have been given an RLE file to load
 	config.RLE = GetRLE(rlefile)

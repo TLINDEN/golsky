@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -35,6 +36,11 @@ func GetRLE(filename string) *rle.RLE {
 
 func main() {
 	config := ParseCommandline()
+
+	if config.ShowVersion {
+		fmt.Printf("This is golsky version %s\n", VERSION)
+		os.Exit(0)
+	}
 
 	game := NewGame(config, Play)
 
