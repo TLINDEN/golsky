@@ -30,6 +30,7 @@ Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
 * game patterns can be loaded using RLE files, see https://catagolue.hatsya.com/home
 * you can paint your own patterns in the game
 * the game can also be started with an empty grid, which is easier to paint patterns
+* wrap around grid mode can be enabled
 
 # Install
 

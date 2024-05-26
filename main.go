@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	VERSION = "v0.0.5"
+	VERSION = "v0.0.6"
 	Alive   = 1
 	Dead    = 0
 )
@@ -60,6 +60,7 @@ func main() {
 	pflag.BoolVarP(&game.Empty, "empty", "e", false, "start with an empty screen")
 	pflag.BoolVarP(&game.Invert, "invert", "i", false, "invert colors (dead cell: black)")
 	pflag.BoolVarP(&game.ShowEvolution, "show-evolution", "s", false, "show evolution tracks")
+	pflag.BoolVarP(&game.Wrap, "wrap-around", "w", false, "wrap around grid mode")
 
 	pflag.Parse()
 

@@ -45,7 +45,8 @@ type Game struct {
 	Markmode                                   bool          // enabled with 'c'
 	MarkTaken                                  bool          // true when mouse1 pressed
 	MarkDone                                   bool          // true when mouse1 released, copy cells between Mark+Point
-	Mark, Point                                image.Point
+	Mark, Point                                image.Point   // area to marks+save
+	Wrap                                       bool          // wether wraparound mode is in place or not
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -551,13 +552,28 @@ func (game *Game) Init() {
 func (game *Game) CountNeighbors(x, y int) int64 {
 	var sum int64
 
-	// so we look ad all 8 neighbors surrounding us. In case we are on
-	// an edge, then  we'll look at the neighbor on  the other side of
-	// the grid, thus wrapping lookahead around.
-	for i := -1; i < 2; i++ {
-		for j := -1; j < 2; j++ {
-			col := (x + i + game.Width) % game.Width
-			row := (y + j + game.Height) % game.Height
+	for nbgX := -1; nbgX < 2; nbgX++ {
+		for nbgY := -1; nbgY < 2; nbgY++ {
+			fmt.Printf("nbgX: %d, nbgY: %d\n", nbgX, nbgY)
+
+			var col, row int
+			if game.Wrap {
+				// In wrap mode we look at all the 8 neighbors surrounding us.
+				// In case we are on an edge we'll look at the neighbor on the
+				//  other side  of the  grid, thus  wrapping lookahead  around
+				// using the mod() function.
+				col = (x + nbgX + game.Width) % game.Width
+				row = (y + nbgY + game.Height) % game.Height
+
+			} else {
+				// In traditional grid mode the edges are deadly
+				if x+nbgX < 0 || x+nbgX >= game.Width || y+nbgY < 0 || y+nbgY >= game.Height {
+					continue
+				}
+				col = x + nbgX
+				row = y + nbgY
+			}
+
 			sum += game.Grids[game.Index].Data[row][col]
 		}
 	}
