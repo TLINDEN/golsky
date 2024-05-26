@@ -162,6 +162,7 @@ func (scene *ScenePlay) CheckInput() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		fmt.Println("mark mode on")
 		scene.Markmode = true
+		scene.Paused = true
 	}
 
 	if scene.Markmode {
@@ -304,7 +305,7 @@ func (scene *ScenePlay) CheckMarkInput() {
 		}
 
 		scene.Point = scene.GetWorldCursorPos()
-		fmt.Printf("Mark: %v, Current: %v\n", scene.Mark, scene.Point)
+		//fmt.Printf("Mark: %v, Point: %v\n", scene.Mark, scene.Point)
 	} else if inpututil.IsMouseButtonJustReleased(ebiten.MouseButton0) {
 		scene.Markmode = false
 		scene.MarkTaken = false
@@ -392,6 +393,23 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				}
 			}
 		}
+	}
+
+	if scene.Markmode && scene.MarkTaken {
+		x := float32(scene.Mark.X * scene.Config.Cellsize)
+		y := float32(scene.Mark.Y * scene.Config.Cellsize)
+		w := float32((scene.Point.X - scene.Mark.X) * scene.Config.Cellsize)
+		h := float32((scene.Point.Y - scene.Mark.Y) * scene.Config.Cellsize)
+
+		// fmt.Printf("%d,%d=>%0.0f,%0.0f to %d,%d=>%0.0f,%0.0f\n",
+		// 	scene.Mark.X, scene.Mark.Y, x, y, scene.Point.X, scene.Point.Y, w, h)
+
+		vector.StrokeRect(
+			scene.World,
+			x+1, y+1,
+			w, h,
+			1.0, scene.Old, false,
+		)
 	}
 
 	scene.Camera.Render(scene.World, screen)
