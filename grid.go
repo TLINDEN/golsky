@@ -12,16 +12,19 @@ import (
 )
 
 type Grid struct {
-	Data          [][]int64
-	Width, Height int
+	Data                   [][]int64
+	Width, Height, Density int
+	Empty                  bool
 }
 
 // Create new empty grid and allocate Data according to provided dimensions
-func NewGrid(width, height int) *Grid {
+func NewGrid(width, height, density int, empty bool) *Grid {
 	grid := &Grid{
-		Height: height,
-		Width:  width,
-		Data:   make([][]int64, height),
+		Height:  height,
+		Width:   width,
+		Density: density,
+		Data:    make([][]int64, height),
+		Empty:   empty,
 	}
 
 	for y := 0; y < height; y++ {
@@ -49,11 +52,11 @@ func (grid *Grid) Clear() {
 	}
 }
 
-func (grid *Grid) FillRandom(game *Game) {
-	if !game.Empty {
+func (grid *Grid) FillRandom(game *ScenePlay) {
+	if !grid.Empty {
 		for y := range grid.Data {
 			for x := range grid.Data[y] {
-				if rand.Intn(game.Density) == 1 {
+				if rand.Intn(grid.Density) == 1 {
 					grid.Data[y][x] = 1
 				}
 			}
