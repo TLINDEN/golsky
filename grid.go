@@ -69,6 +69,11 @@ func GetFilename(generations int64) string {
 	return fmt.Sprintf("dump-%s-%d.gol", now.Format("20060102150405"), generations)
 }
 
+func GetFilenameRLE(generations int64) string {
+	now := time.Now()
+	return fmt.Sprintf("rect-%s-%d.rle", now.Format("20060102150405"), generations)
+}
+
 func (grid *Grid) SaveState(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {

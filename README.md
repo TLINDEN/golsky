@@ -31,6 +31,7 @@ Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
 * you can paint your own patterns in the game
 * the game can also be started with an empty grid, which is easier to paint patterns
 * wrap around grid mode can be enabled
+* you can also save rectangles of the grid to RLE files
 
 # Install
 
@@ -78,6 +79,8 @@ While it runs, there are a couple of commands you can use:
 * move mouse while middle mouse button pressed: move canvas
 * escape: reset to 1:1 zoom
 * s: save game state to file (can be loaded with -l)
+* c: enter copy mode. Mark a rectangle with the mouse, when you
+  release the mous button it is being saved to an RLE file
 * q: quit
 
 # Report bugs

@@ -8,8 +8,9 @@ import (
 
 // a GOL rule
 type Rule struct {
-	Birth []int64
-	Death []int64
+	Definition string
+	Birth      []int64
+	Death      []int64
 }
 
 // parse one part of a GOL rule into rule slice
@@ -37,7 +38,7 @@ func ParseGameRule(rule string) *Rule {
 		log.Fatalf("Invalid game rule <%s>", rule)
 	}
 
-	golrule := &Rule{}
+	golrule := &Rule{Definition: rule}
 
 	for _, part := range parts {
 		if part[0] == 'B' {

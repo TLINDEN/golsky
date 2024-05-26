@@ -12,6 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/tlinden/golsky/rle"
 	"golang.org/x/image/math/f64"
 )
 
@@ -310,6 +311,8 @@ func (scene *ScenePlay) CheckMarkInput() {
 		scene.Markmode = false
 		scene.MarkTaken = false
 		scene.MarkDone = true
+
+		scene.SaveRectRLE()
 	}
 }
 
@@ -320,6 +323,58 @@ func (scene *ScenePlay) SaveState() {
 		log.Printf("failed to save game state to %s: %s", filename, err)
 	}
 	log.Printf("saved game state to %s at generation %d\n", filename, scene.Generations)
+}
+
+func (scene *ScenePlay) SaveRectRLE() {
+	filename := GetFilenameRLE(scene.Generations)
+
+	if scene.Mark.X == scene.Point.X || scene.Mark.Y == scene.Point.Y {
+		log.Printf("can't save non-rectangle\n")
+		return
+	}
+
+	var width int
+	var height int
+	var startx int
+	var starty int
+
+	if scene.Mark.X < scene.Point.X {
+		// mark left point
+		startx = scene.Mark.X
+		width = scene.Point.X - scene.Mark.X
+	} else {
+		// mark right point
+		startx = scene.Point.X
+		width = scene.Mark.X - scene.Point.X
+	}
+
+	if scene.Mark.Y < scene.Point.Y {
+		// mark above point
+		starty = scene.Mark.Y
+		height = scene.Point.Y - scene.Mark.Y
+	} else {
+		// mark below point
+		starty = scene.Point.Y
+		height = scene.Mark.Y - scene.Point.Y
+	}
+
+	grid := make([][]int64, height)
+
+	for y := 0; y < height; y++ {
+		grid[y] = make([]int64, width)
+
+		for x := 0; x < width; x++ {
+			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx]
+		}
+	}
+
+	err := rle.StoreGridToRLE(grid, filename, scene.Config.Rule.Definition, width, height)
+	if err != nil {
+		log.Printf("failed to save rect to %s: %s\n", filename, err)
+	} else {
+		log.Printf("saved selected rect to %s at generation %d\n", filename, scene.Generations)
+	}
+
 }
 
 func (scene *ScenePlay) Update() error {
