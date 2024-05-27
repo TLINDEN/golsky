@@ -35,7 +35,7 @@ type ScenePlay struct {
 	TicksElapsed                               int           // tick counter for game speed
 	Tiles                                      Images        // pre-computed tiles for dead and alife cells
 	Camera                                     Camera        // for zoom+move
-	World                                      *ebiten.Image // actual image we render to
+	World, Cache                               *ebiten.Image // actual image we render to
 	WheelTurned                                bool          // when user turns wheel multiple times, zoom faster
 	Dragging                                   bool          // middle mouse is pressed, move canvas
 	LastCursorPos                              []int         // used to check if the user is dragging
@@ -411,11 +411,8 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	// a nice grey grid with grid lines
 	op := &ebiten.DrawImageOptions{}
 
-	if scene.Config.NoGrid {
-		scene.World.Fill(scene.White)
-	} else {
-		scene.World.Fill(scene.Grey)
-	}
+	op.GeoM.Translate(0, 0)
+	scene.World.DrawImage(scene.Cache, op)
 
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
@@ -443,8 +440,6 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 					default:
 						scene.World.DrawImage(scene.Tiles.Age4, op)
 					}
-				} else {
-					scene.World.DrawImage(scene.Tiles.White, op)
 				}
 			}
 		}
@@ -475,11 +470,11 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			paused = "-- paused --"
 		}
 
-		ebitenutil.DebugPrint(
-			screen,
-			fmt.Sprintf("FPS: %0.2f, TPG: %d, Mem: %0.2f MB, Generations: %d   %s",
-				ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations, paused),
-		)
+		debug := fmt.Sprintf("FPS: %0.2f, TPG: %d, Mem: %0.2f MB, Generations: %d   %s",
+			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations, paused)
+
+		ebitenutil.DebugPrint(screen, debug)
+		fmt.Println(debug)
 	}
 }
 
@@ -501,6 +496,25 @@ func (scene *ScenePlay) InitPattern() {
 					scene.Grids[0].Data[y][x] = 1
 				}
 			}
+		}
+	}
+}
+
+func (scene *ScenePlay) InitCache() {
+	op := &ebiten.DrawImageOptions{}
+
+	if scene.Config.NoGrid {
+		scene.Cache.Fill(scene.White)
+	} else {
+		scene.Cache.Fill(scene.Grey)
+	}
+
+	for y := 0; y < scene.Config.Height; y++ {
+		for x := 0; x < scene.Config.Width; x++ {
+			op.GeoM.Reset()
+			op.GeoM.Translate(float64(x*scene.Config.Cellsize), float64(y*scene.Config.Cellsize))
+
+			scene.Cache.DrawImage(scene.Tiles.White, op)
 		}
 	}
 }
@@ -599,10 +613,12 @@ func (scene *ScenePlay) Init() {
 	}
 
 	scene.World = ebiten.NewImage(scene.Config.ScreenWidth, scene.Config.ScreenHeight)
+	scene.Cache = ebiten.NewImage(scene.Config.ScreenWidth, scene.Config.ScreenHeight)
 
+	scene.InitTiles()
+	scene.InitCache()
 	scene.InitGrid(grid)
 	scene.InitPattern()
-	scene.InitTiles()
 
 	scene.Index = 0
 	scene.TicksElapsed = 0
