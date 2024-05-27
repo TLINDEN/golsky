@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alecthomas/repr"
 	"github.com/spf13/pflag"
 	"github.com/tlinden/golsky/rle"
 )
@@ -66,8 +67,14 @@ func (config *Config) ParseGeom(geom string) error {
 	// fit into window
 	config.ScreenWidth = width - (width % config.Width)
 	config.ScreenHeight = height - (height % config.Height)
+
+	if config.ScreenWidth == 0 || config.ScreenHeight == 0 {
+		return errors.New("the number of requested cells don't fit into the requested window size")
+	}
+
 	config.Cellsize = config.ScreenWidth / config.Width
 
+	repr.Println(config)
 	return nil
 }
 
