@@ -20,6 +20,25 @@ type RLE struct {
 	patternLineIndex int
 }
 
+// wrapper to load a RLE file
+func GetRLE(filename string) (*RLE, error) {
+	if filename == "" {
+		return nil, nil
+	}
+
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	parsedRle, err := Parse(string(content))
+	if err != nil {
+		return nil, fmt.Errorf("failed to load RLE pattern file: %s", err)
+	}
+
+	return &parsedRle, nil
+}
+
 func Parse(input string) (RLE, error) {
 	rle := RLE{
 		inputLines: strings.Split(input, "\n"),
