@@ -7,14 +7,16 @@ type Game struct {
 	Scenes                              map[SceneName]Scene
 	CurrentScene                        SceneName
 	Config                              *Config
+	Shader                              *ebiten.Shader
 }
 
-func NewGame(config *Config, startscene SceneName) *Game {
+func NewGame(config *Config, shader *ebiten.Shader, startscene SceneName) *Game {
 	game := &Game{
 		Config:       config,
 		Scenes:       map[SceneName]Scene{},
 		ScreenWidth:  config.ScreenWidth,
 		ScreenHeight: config.ScreenHeight,
+		Shader:       shader,
 	}
 
 	// setup scene[s]

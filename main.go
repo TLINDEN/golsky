@@ -12,6 +12,22 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+var Shader string = `
+//kage:unit pixels
+
+package main
+
+var Alife int
+
+func Fragment(_ vec4, pos vec2, _ vec4) vec4 {
+	if Alife == 1 {
+		return vec4(0.0)
+	}
+
+	return vec4(1.0)
+}
+`
+
 func main() {
 	config, err := ParseCommandline()
 	if err != nil {
@@ -23,7 +39,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	game := NewGame(config, Play)
+	shader, err := ebiten.NewShader([]byte(Shader))
+	if err != nil {
+		fmt.Println(Shader)
+		log.Fatalf("failed to compile shader: %s\n", err)
+	}
+
+	game := NewGame(config, shader, Play)
 
 	if config.ProfileFile != "" {
 		// enable cpu profiling and use fake game loop
@@ -44,6 +66,14 @@ func main() {
 		os.Exit(0)
 	}
 
+	fd, err := os.Create("cpu.profile")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fd.Close()
+
+	pprof.StartCPUProfile(fd)
+	defer pprof.StopCPUProfile()
 	// main loop
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)

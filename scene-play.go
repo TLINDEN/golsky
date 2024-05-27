@@ -409,7 +409,10 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	// we  fill the whole  screen with  a background color,  the cells
 	// themselfes will be 1px smaller as their nominal size, producing
 	// a nice grey grid with grid lines
-	op := &ebiten.DrawImageOptions{}
+	//op := &ebiten.DrawImageOptions{}
+	shaderop := &ebiten.DrawRectShaderOptions{}
+
+	fmt.Println(ebiten.ActualFPS())
 
 	if scene.Config.NoGrid {
 		scene.World.Fill(scene.White)
@@ -419,34 +422,50 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
-			op.GeoM.Reset()
-			op.GeoM.Translate(float64(x*scene.Config.Cellsize), float64(y*scene.Config.Cellsize))
+			// op.GeoM.Reset()
+			// op.GeoM.Translate(float64(x*scene.Config.Cellsize), float64(y*scene.Config.Cellsize))
+			// age := scene.Generations - scene.History.Data[y][x]
 
-			age := scene.Generations - scene.History.Data[y][x]
-
-			switch scene.Grids[scene.Index].Data[y][x] {
-			case 1:
-				if age > 50 && scene.Config.ShowEvolution {
-					scene.World.DrawImage(scene.Tiles.Old, op)
-				} else {
-					scene.World.DrawImage(scene.Tiles.Black, op)
-				}
-			case 0:
-				if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
-					switch {
-					case age < 10:
-						scene.World.DrawImage(scene.Tiles.Age1, op)
-					case age < 20:
-						scene.World.DrawImage(scene.Tiles.Age2, op)
-					case age < 30:
-						scene.World.DrawImage(scene.Tiles.Age3, op)
-					default:
-						scene.World.DrawImage(scene.Tiles.Age4, op)
-					}
-				} else {
-					scene.World.DrawImage(scene.Tiles.White, op)
-				}
+			shaderop.GeoM.Reset()
+			shaderop.Uniforms = map[string]any{
+				"Alife": scene.Grids[scene.Index].Data[y][x],
 			}
+
+			shaderop.GeoM.Translate(float64(x*scene.Config.Cellsize), float64(y*scene.Config.Cellsize))
+
+			scene.World.DrawRectShader(
+				scene.Config.Cellsize,
+				scene.Config.Cellsize,
+				scene.Game.Shader,
+				shaderop,
+			)
+
+			/*
+				   			switch scene.Grids[scene.Index].Data[y][x] {
+				case 1:
+					if age > 50 && scene.Config.ShowEvolution {
+						scene.World.DrawImage(scene.Tiles.Old, op)
+					} else {
+						scene.World.DrawImage(scene.Tiles.Black, op)
+					}
+				case 0:
+					if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
+						switch {
+						case age < 10:
+							scene.World.DrawImage(scene.Tiles.Age1, op)
+						case age < 20:
+							scene.World.DrawImage(scene.Tiles.Age2, op)
+						case age < 30:
+							scene.World.DrawImage(scene.Tiles.Age3, op)
+						default:
+							scene.World.DrawImage(scene.Tiles.Age4, op)
+						}
+					} else {
+						scene.World.DrawImage(scene.Tiles.White, op)
+					}
+				    }
+			*/
+
 		}
 	}
 
