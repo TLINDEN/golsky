@@ -12,6 +12,7 @@ var FontRenderer = LoadFonts("assets/fonts")
 
 const (
 	GameFont       string = "NotoSans-Regular"
+	GameFontETXT   string = "Noto Sans"
 	FontSizeBig    int    = 48
 	FontSizeNormal int    = 24
 	FontSizeSmall  int    = 12
@@ -25,6 +26,7 @@ type Texter struct {
 }
 
 func LoadFonts(dir string) Texter {
+	// load the font for use with ebitenui
 	fontbytes, err := assetfs.ReadFile(dir + "/" + GameFont + ".ttf")
 	if err != nil {
 		log.Fatal(err)
@@ -53,14 +55,26 @@ func LoadFonts(dir string) Texter {
 		Hinting: font.HintingFull,
 	})
 
+	// load the font for use with etxt
 	fontlib := etxt.NewFontLibrary()
 	_, _, err = fontlib.ParseEmbedDirFonts(dir, assetfs)
 	if err != nil {
 		log.Fatalf("Error while loading fonts: %s", err.Error())
 	}
 
-	if !fontlib.HasFont(GameFont) {
-		log.Fatal("missing font: " + GameFont)
+	/*
+		err = fontlib.EachFont(
+			func(fontName string, font *etxt.Font) error {
+				fmt.Printf("font: %s\n", fontName)
+				return nil
+			})
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
+
+	if !fontlib.HasFont(GameFontETXT) {
+		log.Fatal("missing font: " + GameFontETXT)
 	}
 
 	err = fontlib.EachFont(checkMissingRunes)
@@ -72,7 +86,7 @@ func LoadFonts(dir string) Texter {
 
 	glyphsCache := etxt.NewDefaultCache(10 * 1024 * 1024) // 10MB
 	renderer.SetCacheHandler(glyphsCache.NewHandler())
-	renderer.SetFont(fontlib.GetFont(GameFont))
+	renderer.SetFont(fontlib.GetFont(GameFontETXT))
 
 	return Texter{
 		Renderer:   renderer,

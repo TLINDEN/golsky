@@ -1,12 +1,15 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Game struct {
 	ScreenWidth, ScreenHeight, Cellsize int
 	Scenes                              map[SceneName]Scene
 	CurrentScene                        SceneName
 	Config                              *Config
+	Scale                               int
 }
 
 func NewGame(config *Config, startscene SceneName) *Game {
@@ -34,6 +37,7 @@ func (game *Game) GetCurrentScene() Scene {
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	game.Scale = outsideWidth / 100
 	return game.ScreenWidth, game.ScreenHeight
 }
 

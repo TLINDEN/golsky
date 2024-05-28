@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/tlinden/golsky/rle"
@@ -450,6 +449,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	scene.Camera.Render(scene.World, screen)
 
 	if scene.Config.Debug {
+
 		paused := ""
 		if scene.Paused {
 			paused = "-- paused --"
@@ -458,8 +458,17 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 		debug := fmt.Sprintf("FPS: %0.2f, TPG: %d, Mem: %0.2f MB, Generations: %d   %s",
 			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations, paused)
 
-		ebitenutil.DebugPrint(screen, debug)
-		fmt.Println(debug)
+		FontRenderer.Renderer.SetSizePx(10 + scene.Game.Scale/2)
+		FontRenderer.Renderer.SetTarget(screen)
+
+		FontRenderer.Renderer.SetColor(scene.Black)
+		FontRenderer.Renderer.Draw(debug, 31, 31)
+
+		FontRenderer.Renderer.SetColor(scene.Old)
+		FontRenderer.Renderer.Draw(debug, 30, 30)
+
+		//ebitenutil.DebugPrint(screen, debug)
+		fmt.Println(debug, scene.Game.Scale)
 	}
 }
 
