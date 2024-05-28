@@ -26,6 +26,7 @@ type Config struct {
 	StateGrid                         *Grid    // a grid from a statefile
 	Wrap                              bool     // wether wraparound mode is in place or not
 	ShowVersion                       bool
+	UseShader                         bool // to use a shader to render alife cells
 
 	// for internal profiling
 	ProfileFile     string
@@ -178,6 +179,7 @@ func ParseCommandline() (*Config, error) {
 	pflag.BoolVarP(&config.Invert, "invert", "i", false, "invert colors (dead cell: black)")
 	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution tracks")
 	pflag.BoolVarP(&config.Wrap, "wrap-around", "w", false, "wrap around grid mode")
+	pflag.BoolVarP(&config.UseShader, "use-shader", "k", false, "use shader for cell rendering")
 
 	pflag.StringVarP(&config.ProfileFile, "profile-file", "", "", "enable profiling")
 	pflag.BoolVarP(&config.ProfileDraw, "profile-draw", "", false, "profile draw method (default false)")
