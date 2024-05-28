@@ -184,14 +184,14 @@ func (scene *ScenePlay) CheckInput() {
 		scene.Paused = true // drawing while running makes no sense
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyPageDown) {
-		if scene.Config.TPG < 120 {
-			scene.Config.TPG++
+	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
+		if scene.TPG < 120 {
+			scene.TPG++
 		}
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyPageUp) {
-		if scene.TPG > 1 {
+	if inpututil.IsKeyJustPressed(ebiten.KeyPageUp) {
+		if scene.TPG >= 1 {
 			scene.TPG--
 		}
 	}
@@ -258,25 +258,9 @@ func (scene *ScenePlay) CheckDraggingInput() {
 
 	// Zoom
 	_, dy := ebiten.Wheel()
-	step := 1
 
-	if scene.WheelTurned {
-		// if keep scrolling the wheel, zoom faster
-		step = 50
-	} else {
-		scene.WheelTurned = false
-	}
-
-	if dy < 0 {
-		if scene.Camera.ZoomFactor > -2400 {
-			scene.Camera.ZoomFactor -= step
-		}
-	}
-
-	if dy > 0 {
-		if scene.Camera.ZoomFactor < 2400 {
-			scene.Camera.ZoomFactor += step
-		}
+	if dy != 0 {
+		scene.Camera.ZoomFactor += (int(dy) * 5)
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
@@ -425,6 +409,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			case 1:
 				if age > 50 && scene.Config.ShowEvolution {
 					scene.World.DrawImage(scene.Tiles.Old, op)
+
 				} else {
 					scene.World.DrawImage(scene.Tiles.Black, op)
 				}
