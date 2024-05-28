@@ -81,6 +81,7 @@ While it runs, there are a couple of commands you can use:
 * s: save game state to file (can be loaded with -l)
 * c: enter copy mode. Mark a rectangle with the mouse, when you
   release the mous button it is being saved to an RLE file
+* d: toggle debug output 
 * q: quit
 
 # Report bugs

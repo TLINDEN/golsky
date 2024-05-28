@@ -203,6 +203,10 @@ func (scene *ScenePlay) CheckInput() {
 		scene.Reset()
 	}
 
+	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+		scene.Config.Debug = !scene.Config.Debug
+	}
+
 	if scene.Paused {
 		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
 			scene.Config.RunOneStep = true
