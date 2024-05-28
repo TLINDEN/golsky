@@ -1,0 +1,13 @@
+//kage:unit pixels
+
+package main
+
+var Alife int
+
+func Fragment(_ vec4, pos vec2, _ vec4) vec4 {
+        if Alife == 1 {
+                return vec4(0.0)
+        }
+
+        return vec4(1.0)
+}
