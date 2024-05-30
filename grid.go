@@ -36,7 +36,7 @@ func NewGrid(width, height, density int, empty bool) *Grid {
 	return grid
 }
 
-// Create a 1:1 copy
+// Create a new 1:1 instance
 func (grid *Grid) Clone() *Grid {
 	newgrid := &Grid{}
 
@@ -45,6 +45,15 @@ func (grid *Grid) Clone() *Grid {
 	newgrid.Data = grid.Data
 
 	return newgrid
+}
+
+// copy data
+func (grid *Grid) Copy(other *Grid) {
+	for y := range grid.Data {
+		for x := range grid.Data[y] {
+			other.Data[y][x] = grid.Data[y][x]
+		}
+	}
 }
 
 // delete all contents
@@ -57,7 +66,7 @@ func (grid *Grid) Clear() {
 }
 
 // initialize with random life cells using the given density
-func (grid *Grid) FillRandom(game *ScenePlay) {
+func (grid *Grid) FillRandom() {
 	if !grid.Empty {
 		for y := range grid.Data {
 			for x := range grid.Data[y] {

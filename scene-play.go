@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"math/rand"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -493,6 +492,7 @@ func (scene *ScenePlay) InitPattern() {
 	scene.History.LoadRLE(scene.Config.RLE)
 }
 
+// pre-render offscreen cache image
 func (scene *ScenePlay) InitCache() {
 	op := &ebiten.DrawImageOptions{}
 
@@ -505,13 +505,17 @@ func (scene *ScenePlay) InitCache() {
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
 			op.GeoM.Reset()
-			op.GeoM.Translate(float64(x*scene.Config.Cellsize), float64(y*scene.Config.Cellsize))
+			op.GeoM.Translate(
+				float64(x*scene.Config.Cellsize),
+				float64(y*scene.Config.Cellsize),
+			)
 
 			scene.Cache.DrawImage(scene.Tiles.White, op)
 		}
 	}
 }
 
+// initialize grid[s], either using pre-computed from state or rle file, or random
 func (scene *ScenePlay) InitGrid(grid *Grid) {
 	if grid != nil {
 		// use pre-loaded grid
@@ -529,16 +533,8 @@ func (scene *ScenePlay) InitGrid(grid *Grid) {
 	gridb := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 	history := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 
-	for y := 0; y < scene.Config.Height; y++ {
-		if !scene.Config.Empty {
-			for x := 0; x < scene.Config.Width; x++ {
-				if rand.Intn(scene.Config.Density) == 1 {
-					history.Data[y][x] = 1
-					grida.Data[y][x] = 1
-				}
-			}
-		}
-	}
+	grida.FillRandom()
+	grida.Copy(history)
 
 	scene.Grids = []*Grid{
 		grida,
