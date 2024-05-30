@@ -23,12 +23,13 @@ PREFIX    = /usr/local
 UID       = root
 GID       = 0
 HAVE_POD := $(shell pod2text -h 2>/dev/null)
+#TAGS      = -tags=ebitenginedebug
 
 all: buildlocal
 
 
 buildlocal:
-	go build -o $(tool)
+	go build $(TAGS) -o $(tool)
 
 install: buildlocal
 	install -d -o $(UID) -g $(GID) $(PREFIX)/bin
