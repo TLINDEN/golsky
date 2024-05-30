@@ -177,7 +177,7 @@ func ParseCommandline() (*Config, error) {
 	pflag.BoolVarP(&config.NoGrid, "nogrid", "n", false, "do not draw grid lines")
 	pflag.BoolVarP(&config.Empty, "empty", "e", false, "start with an empty screen")
 	pflag.BoolVarP(&config.Invert, "invert", "i", false, "invert colors (dead cell: black)")
-	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution tracks")
+	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
 	pflag.BoolVarP(&config.Wrap, "wrap-around", "w", false, "wrap around grid mode")
 	pflag.BoolVarP(&config.UseShader, "use-shader", "k", false, "use shader for cell rendering")
 

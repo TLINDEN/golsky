@@ -18,7 +18,7 @@ Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
 
 * flexible parameters as grid and cell size
 * colors can be inverted
-* evolution  tracks can be shown,  with age the cells  color fades and
+* evolution  traces can be shown,  with age the cells  color fades and
   old life cells will be drawn in red
 * game grid lines can be enabled or disabled
 * game speed can be adjusted on startup and in-game
@@ -61,7 +61,7 @@ Usage of ./golsky:
   -p, --paused                     do not start simulation (use space to start)
   -f, --rle-file string            RLE pattern file
   -r, --rule string                game rule (default "B3/S23")
-  -s, --show-evolution             show evolution tracks
+  -s, --show-evolution             show evolution traces
   -t, --ticks-per-generation int   game speed: the higher the slower (default: 10) (default 10)
   -v, --version                    show version
   -W, --width int                  grid width in cells (default 40)
