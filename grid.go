@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tlinden/golsky/rle"
 )
 
 type Grid struct {
@@ -34,6 +36,7 @@ func NewGrid(width, height, density int, empty bool) *Grid {
 	return grid
 }
 
+// Create a 1:1 copy
 func (grid *Grid) Clone() *Grid {
 	newgrid := &Grid{}
 
@@ -44,6 +47,7 @@ func (grid *Grid) Clone() *Grid {
 	return newgrid
 }
 
+// delete all contents
 func (grid *Grid) Clear() {
 	for y := range grid.Data {
 		for x := range grid.Data[y] {
@@ -52,6 +56,7 @@ func (grid *Grid) Clear() {
 	}
 }
 
+// initialize with random life cells using the given density
 func (grid *Grid) FillRandom(game *ScenePlay) {
 	if !grid.Empty {
 		for y := range grid.Data {
@@ -64,16 +69,28 @@ func (grid *Grid) FillRandom(game *ScenePlay) {
 	}
 }
 
-func GetFilename(generations int64) string {
-	now := time.Now()
-	return fmt.Sprintf("dump-%s-%d.gol", now.Format("20060102150405"), generations)
+// initialize using a given RLE pattern
+func (grid *Grid) LoadRLE(pattern *rle.RLE) {
+	if pattern != nil {
+		startX := (grid.Width / 2) - (pattern.Width / 2)
+		startY := (grid.Height / 2) - (pattern.Height / 2)
+		var y, x int
+
+		for rowIndex, patternRow := range pattern.Pattern {
+			for colIndex := range patternRow {
+				if pattern.Pattern[rowIndex][colIndex] > 0 {
+					x = colIndex + startX
+					y = rowIndex + startY
+
+					grid.Data[y][x] = 1
+				}
+			}
+		}
+	}
 }
 
-func GetFilenameRLE(generations int64) string {
-	now := time.Now()
-	return fmt.Sprintf("rect-%s-%d.rle", now.Format("20060102150405"), generations)
-}
-
+// save  the contents  of  the  whole grid  as  a  simple mcell  alike
+// file. One line per row, 0 for dead and 1 for life cell.
 func (grid *Grid) SaveState(filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -81,7 +98,7 @@ func (grid *Grid) SaveState(filename string) error {
 	}
 	defer file.Close()
 
-	for y, _ := range grid.Data {
+	for y := range grid.Data {
 		for _, cell := range grid.Data[y] {
 			_, err := file.WriteString(strconv.FormatInt(cell, 10))
 			if err != nil {
@@ -94,6 +111,7 @@ func (grid *Grid) SaveState(filename string) error {
 	return nil
 }
 
+// the reverse of the above, load a mcell file
 func LoadState(filename string) (*Grid, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
@@ -139,8 +157,9 @@ func LoadState(filename string) (*Grid, error) {
 		}
 
 		if explen != length {
-			return nil, fmt.Errorf(fmt.Sprintf("all rows must be in the same length, got: %d, expected: %d",
-				length, explen))
+			return nil, fmt.Errorf(
+				fmt.Sprintf("all rows must be in the same length, got: %d, expected: %d",
+					length, explen))
 		}
 
 		rows++
@@ -150,4 +169,15 @@ func LoadState(filename string) (*Grid, error) {
 	grid.Height = rows
 
 	return grid, nil
+}
+
+// generate filenames for dumps
+func GetFilename(generations int64) string {
+	now := time.Now()
+	return fmt.Sprintf("dump-%s-%d.gol", now.Format("20060102150405"), generations)
+}
+
+func GetFilenameRLE(generations int64) string {
+	now := time.Now()
+	return fmt.Sprintf("rect-%s-%d.rle", now.Format("20060102150405"), generations)
 }

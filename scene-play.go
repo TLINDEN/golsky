@@ -26,7 +26,7 @@ type ScenePlay struct {
 	Whoami SceneName
 
 	Grids                                      []*Grid // 2 grids: one current, one next
-	History                                    *Grid   // holds state of past dead cells for evolution tracks
+	History                                    *Grid   // holds state of past dead cells for evolution traces
 	Index                                      int     // points to current grid
 	Generations                                int64   // Stats
 	Black, White, Grey, Old                    color.RGBA
@@ -125,7 +125,7 @@ func (scene *ScenePlay) UpdateCells() {
 
 			// set history  to current generation so we  can infer the
 			// age of the cell's state  during rendering and use it to
-			// deduce the color to use if evolution tracking is enabled
+			// deduce the color to use if evolution tracing is enabled
 			if state != nextstate {
 				scene.History.Data[y][x] = scene.Generations
 			}
@@ -401,22 +401,28 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(0, 0)
 	scene.World.DrawImage(scene.Cache, op)
 
+	var age int64
+
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
 			op.GeoM.Reset()
-			op.GeoM.Translate(float64(x*scene.Config.Cellsize), float64(y*scene.Config.Cellsize))
+			op.GeoM.Translate(
+				float64(x*scene.Config.Cellsize),
+				float64(y*scene.Config.Cellsize),
+			)
 
-			age := scene.Generations - scene.History.Data[y][x]
+			age = scene.Generations - scene.History.Data[y][x]
 
 			switch scene.Grids[scene.Index].Data[y][x] {
-			case 1:
+			case Alive:
 				if age > 50 && scene.Config.ShowEvolution {
 					scene.World.DrawImage(scene.Tiles.Old, op)
 
 				} else {
 					scene.World.DrawImage(scene.Tiles.Black, op)
 				}
-			case 0:
+			case Dead:
+				// only draw dead cells in case evolution trace is enabled
 				if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
 					switch {
 					case age < 10:
@@ -433,14 +439,19 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	scene.DrawMark(scene.World)
+
+	scene.Camera.Render(scene.World, screen)
+
+	scene.DrawDebug(screen)
+}
+
+func (scene *ScenePlay) DrawMark(screen *ebiten.Image) {
 	if scene.Markmode && scene.MarkTaken {
 		x := float32(scene.Mark.X * scene.Config.Cellsize)
 		y := float32(scene.Mark.Y * scene.Config.Cellsize)
 		w := float32((scene.Point.X - scene.Mark.X) * scene.Config.Cellsize)
 		h := float32((scene.Point.Y - scene.Mark.Y) * scene.Config.Cellsize)
-
-		// fmt.Printf("%d,%d=>%0.0f,%0.0f to %d,%d=>%0.0f,%0.0f\n",
-		// 	scene.Mark.X, scene.Mark.Y, x, y, scene.Point.X, scene.Point.Y, w, h)
 
 		vector.StrokeRect(
 			scene.World,
@@ -449,20 +460,21 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			1.0, scene.Old, false,
 		)
 	}
+}
 
-	scene.Camera.Render(scene.World, screen)
-
+func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 	if scene.Config.Debug {
-
 		paused := ""
 		if scene.Paused {
 			paused = "-- paused --"
 		}
 
-		debug := fmt.Sprintf("FPS: %0.2f, TPG: %d, Mem: %0.2f MB, Generations: %d   %s",
-			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations, paused)
+		debug := fmt.Sprintf(
+			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f  %s",
+			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations,
+			scene.Game.Scale, paused)
 
-		FontRenderer.Renderer.SetSizePx(10 + scene.Game.Scale/2)
+		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
 		FontRenderer.Renderer.SetTarget(screen)
 
 		FontRenderer.Renderer.SetColor(scene.Black)
@@ -471,31 +483,14 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 		FontRenderer.Renderer.SetColor(scene.Old)
 		FontRenderer.Renderer.Draw(debug, 30, 30)
 
-		//ebitenutil.DebugPrint(screen, debug)
-		fmt.Println(debug, scene.Game.Scale)
+		fmt.Println(debug)
 	}
 }
 
-// FIXME: move these into Grid
 // load a pre-computed pattern from RLE file
 func (scene *ScenePlay) InitPattern() {
-	if scene.Config.RLE != nil {
-		startX := (scene.Config.Width / 2) - (scene.Config.RLE.Width / 2)
-		startY := (scene.Config.Height / 2) - (scene.Config.RLE.Height / 2)
-		var y, x int
-
-		for rowIndex, patternRow := range scene.Config.RLE.Pattern {
-			for colIndex := range patternRow {
-				if scene.Config.RLE.Pattern[rowIndex][colIndex] > 0 {
-					x = colIndex + startX
-					y = rowIndex + startY
-
-					scene.History.Data[y][x] = 1
-					scene.Grids[0].Data[y][x] = 1
-				}
-			}
-		}
-	}
+	scene.Grids[0].LoadRLE(scene.Config.RLE)
+	scene.History.LoadRLE(scene.Config.RLE)
 }
 
 func (scene *ScenePlay) InitCache() {

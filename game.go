@@ -5,11 +5,11 @@ import (
 )
 
 type Game struct {
-	ScreenWidth, ScreenHeight, Cellsize int
-	Scenes                              map[SceneName]Scene
-	CurrentScene                        SceneName
-	Config                              *Config
-	Scale                               int
+	ScreenWidth, ScreenHeight, ReadlWidth, Cellsize int
+	Scenes                                          map[SceneName]Scene
+	CurrentScene                                    SceneName
+	Config                                          *Config
+	Scale                                           float32
 }
 
 func NewGame(config *Config, startscene SceneName) *Game {
@@ -37,7 +37,8 @@ func (game *Game) GetCurrentScene() Scene {
 }
 
 func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	game.Scale = outsideWidth / 100
+	game.ReadlWidth = outsideWidth
+	game.Scale = float32(game.ScreenWidth) / float32(outsideWidth)
 	return game.ScreenWidth, game.ScreenHeight
 }
 
