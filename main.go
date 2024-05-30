@@ -12,6 +12,11 @@ import (
 )
 
 func main() {
+	dau := true
+
+	if len(os.Args) > 1 {
+		dau = false
+	}
 	config, err := ParseCommandline()
 	if err != nil {
 		log.Fatal(err)
@@ -22,7 +27,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	game := NewGame(config, Play)
+	start := Play
+	if dau {
+		start = Menu
+	}
+	game := NewGame(config, SceneName(start))
 
 	if config.ProfileFile != "" {
 		// enable  cpu profiling. Do  NOT use q  to stop the  game but

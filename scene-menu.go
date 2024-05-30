@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"os"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
@@ -16,6 +17,7 @@ type SceneMenu struct {
 	Whoami    SceneName
 	Ui        *ebitenui.UI
 	FontColor color.RGBA
+	First     bool
 }
 
 func NewMenuScene(game *Game, config *Config) Scene {
@@ -64,28 +66,54 @@ func (scene *SceneMenu) Draw(screen *ebiten.Image) {
 }
 
 func (scene *SceneMenu) Init() {
-	rowContainer := NewRowContainer()
+	rowContainer := NewRowContainer("Main Menu")
 
-	pause := NewCheckbox("Pause", *FontRenderer.FontSmall,
-		func(args *widget.CheckboxChangedEventArgs) {
-			scene.Config.TogglePaused()
+	empty := NewMenuButton("Start with empty grid",
+		func(args *widget.ButtonClickedEventArgs) {
+			scene.Config.Empty = true
+			scene.Config.Restart = true
+			scene.SetNext(Play)
 		})
 
-	copy := NewMenuButton("Save Copy as RLE", *FontRenderer.FontSmall,
+	random := NewMenuButton("Start with random patterns",
+		func(args *widget.ButtonClickedEventArgs) {
+			scene.Config.Restart = true
+			scene.SetNext(Play)
+		})
+
+	copy := NewMenuButton("Save Copy as RLE",
 		func(args *widget.ButtonClickedEventArgs) {
 			scene.Config.Markmode = true
 			scene.Config.Paused = true
 			scene.SetNext(Play)
 		})
 
-	label := widget.NewText(
-		widget.TextOpts.Text("Menu", *FontRenderer.FontNormal, scene.FontColor),
-		widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionCenter),
-	)
+	options := NewMenuButton("Options",
+		func(args *widget.ButtonClickedEventArgs) {
+			scene.SetNext(Options)
+		})
 
-	rowContainer.AddChild(label)
-	rowContainer.AddChild(pause)
+	separator1 := NewSeparator()
+	separator2 := NewSeparator()
+
+	cancel := NewMenuButton("Close",
+		func(args *widget.ButtonClickedEventArgs) {
+			scene.SetNext(Play)
+		})
+
+	quit := NewMenuButton("Quit",
+		func(args *widget.ButtonClickedEventArgs) {
+			os.Exit(0)
+		})
+
+	rowContainer.AddChild(empty)
+	rowContainer.AddChild(random)
+	rowContainer.AddChild(separator1)
+	rowContainer.AddChild(options)
 	rowContainer.AddChild(copy)
+	rowContainer.AddChild(separator2)
+	rowContainer.AddChild(cancel)
+	rowContainer.AddChild(quit)
 
 	scene.Ui = &ebitenui.UI{
 		Container: rowContainer.Container(),

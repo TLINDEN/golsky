@@ -366,6 +366,12 @@ func (scene *ScenePlay) SaveRectRLE() {
 }
 
 func (scene *ScenePlay) Update() error {
+	if scene.Config.Restart {
+		scene.Config.Restart = false
+		scene.Init()
+		return nil
+	}
+
 	scene.CheckInput()
 	scene.CheckDraggingInput()
 	scene.CheckMarkInput()

@@ -27,6 +27,8 @@ type Config struct {
 	Wrap                                   bool     // wether wraparound mode is in place or not
 	ShowVersion                            bool
 	UseShader                              bool // to use a shader to render alife cells
+	Restart                                bool
+	StartWithMenu                          bool
 
 	// for internal profiling
 	ProfileFile     string
@@ -208,4 +210,17 @@ func ParseCommandline() (*Config, error) {
 
 func (config *Config) TogglePaused() {
 	config.Paused = !config.Paused
+}
+
+func (config *Config) ToggleDebugging() {
+	fmt.Println("DEBUG TOGGLED")
+	config.Debug = !config.Debug
+}
+
+func (config *Config) ToggleInvert() {
+	config.Invert = !config.Invert
+}
+
+func (config *Config) ToggleGridlines() {
+	config.NoGrid = !config.NoGrid
 }

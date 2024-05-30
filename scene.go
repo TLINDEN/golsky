@@ -22,4 +22,5 @@ type Scene interface {
 const (
 	Menu = iota // main top level menu
 	Play        // actual playing happens here
+	Options
 )

@@ -5,12 +5,10 @@ import (
 
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
-	"golang.org/x/image/font"
 )
 
 func NewMenuButton(
 	text string,
-	face font.Face,
 	action func(args *widget.ButtonClickedEventArgs)) *widget.Button {
 
 	buttonImage, _ := LoadButtonImage()
@@ -27,7 +25,7 @@ func NewMenuButton(
 
 		widget.ButtonOpts.Image(buttonImage),
 
-		widget.ButtonOpts.Text(text, face, &widget.ButtonTextColor{
+		widget.ButtonOpts.Text(text, *FontRenderer.FontSmall, &widget.ButtonTextColor{
 			Idle: color.NRGBA{0xdf, 0xf4, 0xff, 0xff},
 		}),
 
@@ -44,7 +42,6 @@ func NewMenuButton(
 
 func NewCheckbox(
 	text string,
-	face font.Face,
 	action func(args *widget.CheckboxChangedEventArgs)) *widget.LabeledCheckbox {
 
 	checkboxImage, _ := LoadCheckboxImage()
@@ -52,17 +49,44 @@ func NewCheckbox(
 
 	return widget.NewLabeledCheckbox(
 		widget.LabeledCheckboxOpts.CheckboxOpts(
-			widget.CheckboxOpts.ButtonOpts(widget.ButtonOpts.Image(buttonImage)),
+			widget.CheckboxOpts.ButtonOpts(
+				widget.ButtonOpts.Image(buttonImage),
+			),
 			widget.CheckboxOpts.Image(checkboxImage),
 			widget.CheckboxOpts.StateChangedHandler(action),
 		),
 		widget.LabeledCheckboxOpts.LabelOpts(
-			widget.LabelOpts.Text(text, face,
+			widget.LabelOpts.Text(text, *FontRenderer.FontSmall,
 				&widget.LabelColor{
 					Idle: color.NRGBA{0xdf, 0xf4, 0xff, 0xff},
 				}),
 		),
 	)
+}
+
+func NewSeparator() widget.PreferredSizeLocateableWidget {
+	c := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(
+			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
+			widget.RowLayoutOpts.Padding(widget.Insets{
+				Top:    20,
+				Bottom: 20,
+			}))),
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(
+				widget.RowLayoutData{Stretch: true})))
+
+	c.AddChild(widget.NewGraphic(
+		widget.GraphicOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
+			Stretch:   true,
+			MaxHeight: 2,
+		})),
+		widget.GraphicOpts.ImageNineSlice(
+			image.NewNineSliceColor(
+				color.NRGBA{0xdf, 0xf4, 0xff, 0xff})),
+	))
+
+	return c
 }
 
 type RowContainer struct {
@@ -79,10 +103,18 @@ func (container *RowContainer) Container() *widget.Container {
 }
 
 // set arg to false if no background needed
-func NewRowContainer() *RowContainer {
+func NewRowContainer(title string) *RowContainer {
+	buttonImageHover := image.NewNineSlice(Assets["button-9slice3"], [3]int{3, 3, 3}, [3]int{3, 3, 3})
+
 	uiContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
 	)
+
+	titleLabel := widget.NewText(
+		widget.TextOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
+			Stretch: true,
+		})),
+		widget.TextOpts.Text(title, *FontRenderer.FontNormal, color.NRGBA{0xdf, 0xf4, 0xff, 0xff}))
 
 	rowContainer := widget.NewContainer(
 		widget.ContainerOpts.WidgetOpts(
@@ -96,7 +128,10 @@ func NewRowContainer() *RowContainer {
 			widget.RowLayoutOpts.Padding(widget.NewInsetsSimple(20)),
 			widget.RowLayoutOpts.Spacing(0),
 		)),
+		widget.ContainerOpts.BackgroundImage(buttonImageHover),
 	)
+
+	rowContainer.AddChild(titleLabel)
 
 	uiContainer.AddChild(rowContainer)
 
