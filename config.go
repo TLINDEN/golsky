@@ -15,18 +15,18 @@ import (
 
 // all the settings comming from commandline, but maybe tweaked later from the UI
 type Config struct {
-	Width, Height, Cellsize, Density  int // measurements
-	ScreenWidth, ScreenHeight         int
-	TPG                               int      // ticks per generation/game speed, 1==max
-	Debug, Empty, Invert, Paused      bool     // game modi
-	ShowEvolution, NoGrid, RunOneStep bool     // flags
-	Rule                              *Rule    // which rule to use, default: B3/S23
-	RLE                               *rle.RLE // loaded GOL pattern from RLE file
-	Statefile                         string   // load game state from it if non-nil
-	StateGrid                         *Grid    // a grid from a statefile
-	Wrap                              bool     // wether wraparound mode is in place or not
-	ShowVersion                       bool
-	UseShader                         bool // to use a shader to render alife cells
+	Width, Height, Cellsize, Density       int // measurements
+	ScreenWidth, ScreenHeight              int
+	TPG                                    int      // ticks per generation/game speed, 1==max
+	Debug, Empty, Invert, Paused, Markmode bool     // game modi
+	ShowEvolution, NoGrid, RunOneStep      bool     // flags
+	Rule                                   *Rule    // which rule to use, default: B3/S23
+	RLE                                    *rle.RLE // loaded GOL pattern from RLE file
+	Statefile                              string   // load game state from it if non-nil
+	StateGrid                              *Grid    // a grid from a statefile
+	Wrap                                   bool     // wether wraparound mode is in place or not
+	ShowVersion                            bool
+	UseShader                              bool // to use a shader to render alife cells
 
 	// for internal profiling
 	ProfileFile     string
@@ -204,4 +204,8 @@ func ParseCommandline() (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func (config *Config) TogglePaused() {
+	config.Paused = !config.Paused
 }

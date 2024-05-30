@@ -37,11 +37,10 @@ type ScenePlay struct {
 	WheelTurned                                bool          // when user turns wheel multiple times, zoom faster
 	Dragging                                   bool          // middle mouse is pressed, move canvas
 	LastCursorPos                              []int         // used to check if the user is dragging
-	Markmode                                   bool          // enabled with 'c'
 	MarkTaken                                  bool          // true when mouse1 pressed
 	MarkDone                                   bool          // true when mouse1 released, copy cells between Mark+Point
 	Mark, Point                                image.Point   // area to marks+save
-	Paused, RunOneStep                         bool          // mutable flags from config
+	RunOneStep                                 bool          // mutable flags from config
 	TPG                                        int
 }
 
@@ -51,7 +50,6 @@ func NewPlayScene(game *Game, config *Config) Scene {
 		Game:       game,
 		Next:       Play,
 		Config:     config,
-		Paused:     config.Paused,
 		TPG:        config.TPG,
 		RunOneStep: config.RunOneStep,
 	}
@@ -147,9 +145,9 @@ func (scene *ScenePlay) UpdateCells() {
 }
 
 func (scene *ScenePlay) Reset() {
-	scene.Paused = true
+	scene.Config.Paused = true
 	scene.InitGrid(nil)
-	scene.Paused = false
+	scene.Config.Paused = false
 }
 
 // check user input
@@ -160,26 +158,30 @@ func (scene *ScenePlay) CheckInput() {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		fmt.Println("mark mode on")
-		scene.Markmode = true
-		scene.Paused = true
+		scene.Config.Markmode = true
+		scene.Config.Paused = true
 	}
 
-	if scene.Markmode {
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		scene.SetNext(Menu)
+	}
+
+	if scene.Config.Markmode {
 		return
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
-		scene.Paused = !scene.Paused
+		scene.Config.TogglePaused()
 	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		scene.ToggleCellOnCursorPos(Alive)
-		scene.Paused = true // drawing while running makes no sense
+		scene.Config.Paused = true // drawing while running makes no sense
 	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
 		scene.ToggleCellOnCursorPos(Dead)
-		scene.Paused = true // drawing while running makes no sense
+		scene.Config.Paused = true // drawing while running makes no sense
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
@@ -206,7 +208,7 @@ func (scene *ScenePlay) CheckInput() {
 		scene.Config.Debug = !scene.Config.Debug
 	}
 
-	if scene.Paused {
+	if scene.Config.Paused {
 		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
 			scene.Config.RunOneStep = true
 		}
@@ -216,7 +218,7 @@ func (scene *ScenePlay) CheckInput() {
 // Check dragging input.  move the canvas with the  mouse while pressing
 // the middle mouse button, zoom in and out using the wheel.
 func (scene *ScenePlay) CheckDraggingInput() {
-	if scene.Markmode {
+	if scene.Config.Markmode {
 		return
 	}
 
@@ -280,7 +282,7 @@ func (scene *ScenePlay) GetWorldCursorPos() image.Point {
 }
 
 func (scene *ScenePlay) CheckMarkInput() {
-	if !scene.Markmode {
+	if !scene.Config.Markmode {
 		return
 	}
 
@@ -294,7 +296,7 @@ func (scene *ScenePlay) CheckMarkInput() {
 		scene.Point = scene.GetWorldCursorPos()
 		//fmt.Printf("Mark: %v, Point: %v\n", scene.Mark, scene.Point)
 	} else if inpututil.IsMouseButtonJustReleased(ebiten.MouseButton0) {
-		scene.Markmode = false
+		scene.Config.Markmode = false
 		scene.MarkTaken = false
 		scene.MarkDone = true
 
@@ -368,7 +370,7 @@ func (scene *ScenePlay) Update() error {
 	scene.CheckDraggingInput()
 	scene.CheckMarkInput()
 
-	if !scene.Paused || scene.RunOneStep {
+	if !scene.Config.Paused || scene.RunOneStep {
 		scene.UpdateCells()
 	}
 
@@ -446,7 +448,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 }
 
 func (scene *ScenePlay) DrawMark(screen *ebiten.Image) {
-	if scene.Markmode && scene.MarkTaken {
+	if scene.Config.Markmode && scene.MarkTaken {
 		x := float32(scene.Mark.X * scene.Config.Cellsize)
 		y := float32(scene.Mark.Y * scene.Config.Cellsize)
 		w := float32((scene.Point.X - scene.Mark.X) * scene.Config.Cellsize)
@@ -464,7 +466,7 @@ func (scene *ScenePlay) DrawMark(screen *ebiten.Image) {
 func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 	if scene.Config.Debug {
 		paused := ""
-		if scene.Paused {
+		if scene.Config.Paused {
 			paused = "-- paused --"
 		}
 

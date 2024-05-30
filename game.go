@@ -23,12 +23,13 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	// setup scene[s]
 	game.CurrentScene = startscene
 	game.Scenes[Play] = NewPlayScene(game, config)
+	game.Scenes[Menu] = NewMenuScene(game, config)
 
 	// setup environment
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowTitle("golsky - conway's game of life")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-
+	ebiten.SetScreenClearedEveryFrame(false)
 	return game
 }
 
@@ -61,12 +62,5 @@ func (game *Game) Update() error {
 
 func (game *Game) Draw(screen *ebiten.Image) {
 	scene := game.GetCurrentScene()
-
-	if scene.Clearscreen() {
-		ebiten.SetScreenClearedEveryFrame(true)
-	} else {
-		ebiten.SetScreenClearedEveryFrame(false)
-	}
-
 	scene.Draw(screen)
 }
