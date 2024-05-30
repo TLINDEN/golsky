@@ -1,1 +1,2 @@
-- Implement RLE writing on scene.MarkDone
+- gird lines option has no effect
+- add all other options like size etc
