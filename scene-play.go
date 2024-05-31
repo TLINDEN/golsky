@@ -24,6 +24,8 @@ type ScenePlay struct {
 	Next   SceneName
 	Whoami SceneName
 
+	Clear bool
+
 	Grids                                      []*Grid // 2 grids: one current, one next
 	History                                    *Grid   // holds state of past dead cells for evolution traces
 	Index                                      int     // points to current grid
@@ -156,14 +158,23 @@ func (scene *ScenePlay) CheckInput() {
 		os.Exit(0)
 	}
 
+	// FIXME: works from here
+	if inpututil.IsKeyJustPressed(ebiten.KeyK) {
+		scene.Clear = !scene.Clear
+		fmt.Printf("Clear: %t\n", scene.Clear)
+		ebiten.SetScreenClearedEveryFrame(scene.Clear)
+	}
+
+	// FIXME: and this does have no effect. WHY?!?!?
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		ebiten.SetScreenClearedEveryFrame(false)
+		scene.SetNext(Menu)
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		fmt.Println("mark mode on")
 		scene.Config.Markmode = true
 		scene.Config.Paused = true
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		scene.SetNext(Menu)
 	}
 
 	if scene.Config.Markmode {
@@ -483,9 +494,9 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 		}
 
 		debug := fmt.Sprintf(
-			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f, Z: %d  %s",
+			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f, Z: %d, Clear: %t  %s",
 			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations,
-			scene.Game.Scale, scene.Camera.ZoomFactor, paused)
+			scene.Game.Scale, scene.Camera.ZoomFactor, ebiten.IsScreenClearedEveryFrame(), paused)
 
 		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
 		FontRenderer.Renderer.SetTarget(screen)

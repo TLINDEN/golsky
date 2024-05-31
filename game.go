@@ -31,6 +31,7 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowTitle("golsky - conway's game of life")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	ebiten.SetScreenClearedEveryFrame(true)
 
 	game.Screen = ebiten.NewImage(game.ScreenWidth, game.ScreenHeight)
 	return game
@@ -50,6 +51,7 @@ func (game *Game) Update() error {
 	scene := game.GetCurrentScene()
 	scene.Update()
 
+	// FIXME: should work, but doesn't
 	//ebiten.SetScreenClearedEveryFrame(scene.Clearscreen())
 
 	next := scene.GetNext()
@@ -62,11 +64,12 @@ func (game *Game) Update() error {
 		game.CurrentScene = next
 	}
 
+	//fmt.Printf("Clear Screen: %t\n", ebiten.IsScreenClearedEveryFrame())
+
 	return nil
 }
 
 func (game *Game) Draw(screen *ebiten.Image) {
 	scene := game.GetCurrentScene()
-	ebiten.SetScreenClearedEveryFrame(scene.Clearscreen())
 	scene.Draw(screen)
 }

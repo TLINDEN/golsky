@@ -54,7 +54,7 @@ func (scene *SceneMenu) Update() error {
 	scene.Ui.Update()
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsKeyJustPressed(ebiten.KeyQ) {
-		scene.SetNext(Play)
+		scene.Leave()
 	}
 
 	return nil
@@ -62,13 +62,18 @@ func (scene *SceneMenu) Update() error {
 }
 
 func (scene *SceneMenu) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Reset()
-	op.GeoM.Translate(0, 0)
+	//op := &ebiten.DrawImageOptions{}
+	// op.GeoM.Reset()
+	// op.GeoM.Translate(0, 0)
 
-	screen.DrawImage(scene.Game.Screen, op)
+	// screen.DrawImage(scene.Game.Screen, op)
 
 	scene.Ui.Draw(screen)
+}
+
+func (scene *SceneMenu) Leave() {
+	ebiten.SetScreenClearedEveryFrame(true)
+	scene.SetNext(Play)
 }
 
 func (scene *SceneMenu) Init() {
@@ -78,20 +83,20 @@ func (scene *SceneMenu) Init() {
 		func(args *widget.ButtonClickedEventArgs) {
 			scene.Config.Empty = true
 			scene.Config.Restart = true
-			scene.SetNext(Play)
+			scene.Leave()
 		})
 
 	random := NewMenuButton("Start with random patterns",
 		func(args *widget.ButtonClickedEventArgs) {
 			scene.Config.Restart = true
-			scene.SetNext(Play)
+			scene.Leave()
 		})
 
 	copy := NewMenuButton("Save Copy as RLE",
 		func(args *widget.ButtonClickedEventArgs) {
 			scene.Config.Markmode = true
 			scene.Config.Paused = true
-			scene.SetNext(Play)
+			scene.Leave()
 		})
 
 	options := NewMenuButton("Options",
@@ -105,7 +110,7 @@ func (scene *SceneMenu) Init() {
 
 	cancel := NewMenuButton("Close Window",
 		func(args *widget.ButtonClickedEventArgs) {
-			scene.SetNext(Play)
+			scene.Leave()
 		})
 
 	quit := NewMenuButton("Exit Golsky",
