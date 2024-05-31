@@ -63,6 +63,17 @@ func (scene *SceneOptions) Draw(screen *ebiten.Image) {
 	scene.Ui.Draw(screen)
 }
 
+func (scene *SceneOptions) SetInitialValue(w *widget.LabeledCheckbox, value bool) {
+	var intval int
+	if value {
+		intval = 1
+	}
+
+	w.SetState(
+		widget.WidgetState(intval),
+	)
+}
+
 func (scene *SceneOptions) Init() {
 	rowContainer := NewRowContainer("Options")
 
@@ -75,23 +86,19 @@ func (scene *SceneOptions) Init() {
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.ToggleDebugging()
 		})
-	var debug int
-	if scene.Config.Debug {
-		debug = 1
-	}
-	debugging.SetState(
-		widget.WidgetState(debug),
-	)
+	scene.SetInitialValue(debugging, scene.Config.Debug)
 
 	invert := NewCheckbox("Invert",
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.Invert = true
 		})
+	scene.SetInitialValue(invert, scene.Config.Invert)
 
 	gridlines := NewCheckbox("Show grid lines",
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.ToggleGridlines()
 		})
+	scene.SetInitialValue(gridlines, scene.Config.ShowGrid)
 
 	separator := NewSeparator()
 

@@ -77,7 +77,8 @@ While it runs, there are a couple of commands you can use:
 * page down: slow down
 * Mouse wheel: zoom in or out
 * move mouse while middle mouse button pressed: move canvas
-* escape: reset to 1:1 zoom
+* r: reset to 1:1 zoom
+* escape: open menu
 * s: save game state to file (can be loaded with -l)
 * c: enter copy mode. Mark a rectangle with the mouse, when you
   release the mous button it is being saved to an RLE file

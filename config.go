@@ -19,7 +19,7 @@ type Config struct {
 	ScreenWidth, ScreenHeight              int
 	TPG                                    int      // ticks per generation/game speed, 1==max
 	Debug, Empty, Invert, Paused, Markmode bool     // game modi
-	ShowEvolution, NoGrid, RunOneStep      bool     // flags
+	ShowEvolution, ShowGrid, RunOneStep    bool     // flags
 	Rule                                   *Rule    // which rule to use, default: B3/S23
 	RLE                                    *rle.RLE // loaded GOL pattern from RLE file
 	Statefile                              string   // load game state from it if non-nil
@@ -27,8 +27,9 @@ type Config struct {
 	Wrap                                   bool     // wether wraparound mode is in place or not
 	ShowVersion                            bool
 	UseShader                              bool // to use a shader to render alife cells
-	Restart                                bool
+	Restart, RestartGrid, RestartCache     bool
 	StartWithMenu                          bool
+	Zoomfactor                             int
 
 	// for internal profiling
 	ProfileFile     string
@@ -40,6 +41,12 @@ const (
 	VERSION = "v0.0.7"
 	Alive   = 1
 	Dead    = 0
+
+	DEFAULT_WIDTH      = 600
+	DEFAULT_HEIGHT     = 400
+	DEFAULT_CELLSIZE   = 4
+	DEFAULT_ZOOMFACTOR = 150 // FIXME, doesn't work?
+	DEFAULT_GEOM       = "640x384"
 )
 
 // parse given window geometry and adjust game settings according to it
@@ -47,6 +54,7 @@ func (config *Config) ParseGeom(geom string) error {
 	if geom == "" {
 		config.ScreenWidth = config.Cellsize * config.Width
 		config.ScreenHeight = config.Cellsize * config.Height
+		config.Zoomfactor = 0
 		return nil
 	}
 
@@ -66,16 +74,23 @@ func (config *Config) ParseGeom(geom string) error {
 		return errors.New("failed to parse height, expecting integer")
 	}
 
-	// adjust dimensions, account for  grid width+height so that cells
-	// fit into window
-	config.ScreenWidth = width - (width % config.Width)
-	config.ScreenHeight = height - (height % config.Height)
+	/*
+		// adjust dimensions, account for  grid width+height so that cells
+		// fit into window
+		config.ScreenWidth = width - (width % config.Width)
+		config.ScreenHeight = height - (height % config.Height)
 
-	if config.ScreenWidth == 0 || config.ScreenHeight == 0 {
-		return errors.New("the number of requested cells don't fit into the requested window size")
-	}
+		if config.ScreenWidth == 0 || config.ScreenHeight == 0 {
+			return errors.New("the number of requested cells don't fit into the requested window size")
+		}
+	*/
 
-	config.Cellsize = config.ScreenWidth / config.Width
+	config.ScreenWidth = width
+	config.ScreenHeight = height
+
+	//config.Cellsize = config.ScreenWidth / config.Width
+	config.Cellsize = DEFAULT_CELLSIZE
+	config.Zoomfactor = DEFAULT_ZOOMFACTOR
 
 	repr.Println(config)
 	return nil
@@ -160,10 +175,10 @@ func ParseCommandline() (*Config, error) {
 	)
 
 	// commandline params, most configure directly config flags
-	pflag.IntVarP(&config.Width, "width", "W", 40, "grid width in cells")
-	pflag.IntVarP(&config.Height, "height", "H", 40, "grid height in cells")
+	pflag.IntVarP(&config.Width, "width", "W", DEFAULT_WIDTH, "grid width in cells")
+	pflag.IntVarP(&config.Height, "height", "H", DEFAULT_HEIGHT, "grid height in cells")
 	pflag.IntVarP(&config.Cellsize, "cellsize", "c", 8, "cell size in pixels")
-	pflag.StringVarP(&geom, "geom", "g", "", "window geometry in WxH in pixels, overturns -c")
+	pflag.StringVarP(&geom, "geom", "G", DEFAULT_GEOM, "window geometry in WxH in pixels, overturns -c")
 
 	pflag.IntVarP(&config.Density, "density", "D", 10, "density of random cells")
 	pflag.IntVarP(&config.TPG, "ticks-per-generation", "t", 10,
@@ -176,7 +191,7 @@ func ParseCommandline() (*Config, error) {
 	pflag.BoolVarP(&config.ShowVersion, "version", "v", false, "show version")
 	pflag.BoolVarP(&config.Paused, "paused", "p", false, "do not start simulation (use space to start)")
 	pflag.BoolVarP(&config.Debug, "debug", "d", false, "show debug info")
-	pflag.BoolVarP(&config.NoGrid, "nogrid", "n", false, "do not draw grid lines")
+	pflag.BoolVarP(&config.ShowGrid, "show-grid", "g", true, "draw grid lines")
 	pflag.BoolVarP(&config.Empty, "empty", "e", false, "start with an empty screen")
 	pflag.BoolVarP(&config.Invert, "invert", "i", false, "invert colors (dead cell: black)")
 	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
@@ -219,8 +234,10 @@ func (config *Config) ToggleDebugging() {
 
 func (config *Config) ToggleInvert() {
 	config.Invert = !config.Invert
+	config.RestartCache = true
 }
 
 func (config *Config) ToggleGridlines() {
-	config.NoGrid = !config.NoGrid
+	config.ShowGrid = !config.ShowGrid
+	config.RestartCache = true
 }

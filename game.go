@@ -10,6 +10,7 @@ type Game struct {
 	CurrentScene                                    SceneName
 	Config                                          *Config
 	Scale                                           float32
+	Screen                                          *ebiten.Image
 }
 
 func NewGame(config *Config, startscene SceneName) *Game {
@@ -30,7 +31,8 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowTitle("golsky - conway's game of life")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetScreenClearedEveryFrame(false)
+
+	game.Screen = ebiten.NewImage(game.ScreenWidth, game.ScreenHeight)
 	return game
 }
 
@@ -48,6 +50,8 @@ func (game *Game) Update() error {
 	scene := game.GetCurrentScene()
 	scene.Update()
 
+	//ebiten.SetScreenClearedEveryFrame(scene.Clearscreen())
+
 	next := scene.GetNext()
 
 	if next != game.CurrentScene {
@@ -63,5 +67,6 @@ func (game *Game) Update() error {
 
 func (game *Game) Draw(screen *ebiten.Image) {
 	scene := game.GetCurrentScene()
+	ebiten.SetScreenClearedEveryFrame(scene.Clearscreen())
 	scene.Draw(screen)
 }

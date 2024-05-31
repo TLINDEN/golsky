@@ -62,6 +62,12 @@ func (scene *SceneMenu) Update() error {
 }
 
 func (scene *SceneMenu) Draw(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Reset()
+	op.GeoM.Translate(0, 0)
+
+	screen.DrawImage(scene.Game.Screen, op)
+
 	scene.Ui.Draw(screen)
 }
 
@@ -95,13 +101,14 @@ func (scene *SceneMenu) Init() {
 
 	separator1 := NewSeparator()
 	separator2 := NewSeparator()
+	separator3 := NewSeparator()
 
-	cancel := NewMenuButton("Close",
+	cancel := NewMenuButton("Close Window",
 		func(args *widget.ButtonClickedEventArgs) {
 			scene.SetNext(Play)
 		})
 
-	quit := NewMenuButton("Quit",
+	quit := NewMenuButton("Exit Golsky",
 		func(args *widget.ButtonClickedEventArgs) {
 			os.Exit(0)
 		})
@@ -113,6 +120,7 @@ func (scene *SceneMenu) Init() {
 	rowContainer.AddChild(copy)
 	rowContainer.AddChild(separator2)
 	rowContainer.AddChild(cancel)
+	rowContainer.AddChild(separator3)
 	rowContainer.AddChild(quit)
 
 	scene.Ui = &ebitenui.UI{

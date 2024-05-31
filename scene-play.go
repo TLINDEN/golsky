@@ -200,10 +200,6 @@ func (scene *ScenePlay) CheckInput() {
 		scene.SaveState()
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
-		scene.Reset()
-	}
-
 	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
 		scene.Config.Debug = !scene.Config.Debug
 	}
@@ -267,7 +263,7 @@ func (scene *ScenePlay) CheckDraggingInput() {
 		scene.Camera.ZoomFactor += (int(dy) * 5)
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		scene.Camera.Reset()
 	}
 
@@ -372,6 +368,13 @@ func (scene *ScenePlay) Update() error {
 		return nil
 	}
 
+	if scene.Config.RestartCache {
+		scene.Config.RestartCache = false
+		scene.InitTiles()
+		scene.InitCache()
+		return nil
+	}
+
 	scene.CheckInput()
 	scene.CheckDraggingInput()
 	scene.CheckMarkInput()
@@ -389,8 +392,6 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
 	worldX, worldY := scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	x := int(worldX) / scene.Config.Cellsize
 	y := int(worldY) / scene.Config.Cellsize
-
-	//fmt.Printf("cell at %d,%d\n", x, y)
 
 	if x > -1 && y > -1 {
 		scene.Grids[scene.Index].Data[y][x] = alive
@@ -451,6 +452,11 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	scene.Camera.Render(scene.World, screen)
 
 	scene.DrawDebug(screen)
+
+	op.GeoM.Reset()
+	op.GeoM.Translate(0, 0)
+
+	scene.Game.Screen.DrawImage(screen, op)
 }
 
 func (scene *ScenePlay) DrawMark(screen *ebiten.Image) {
@@ -477,9 +483,9 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 		}
 
 		debug := fmt.Sprintf(
-			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f  %s",
+			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f, Z: %d  %s",
 			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations,
-			scene.Game.Scale, paused)
+			scene.Game.Scale, scene.Camera.ZoomFactor, paused)
 
 		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
 		FontRenderer.Renderer.SetTarget(screen)
@@ -504,10 +510,10 @@ func (scene *ScenePlay) InitPattern() {
 func (scene *ScenePlay) InitCache() {
 	op := &ebiten.DrawImageOptions{}
 
-	if scene.Config.NoGrid {
-		scene.Cache.Fill(scene.White)
-	} else {
+	if scene.Config.ShowGrid {
 		scene.Cache.Fill(scene.Grey)
+	} else {
+		scene.Cache.Fill(scene.White)
 	}
 
 	for y := 0; y < scene.Config.Height; y++ {
@@ -621,6 +627,10 @@ func (scene *ScenePlay) Init() {
 	scene.TicksElapsed = 0
 
 	scene.LastCursorPos = make([]int, 2)
+
+	if scene.Config.Zoomfactor < 0 || scene.Config.Zoomfactor > 0 {
+		scene.Camera.ZoomFactor = scene.Config.Zoomfactor
+	}
 }
 
 // count the living neighbors of a cell
