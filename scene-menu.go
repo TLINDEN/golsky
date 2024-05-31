@@ -62,17 +62,11 @@ func (scene *SceneMenu) Update() error {
 }
 
 func (scene *SceneMenu) Draw(screen *ebiten.Image) {
-	//op := &ebiten.DrawImageOptions{}
-	// op.GeoM.Reset()
-	// op.GeoM.Translate(0, 0)
-
-	// screen.DrawImage(scene.Game.Screen, op)
-
+	ebiten.SetScreenClearedEveryFrame(false)
 	scene.Ui.Draw(screen)
 }
 
 func (scene *SceneMenu) Leave() {
-	ebiten.SetScreenClearedEveryFrame(true)
 	scene.SetNext(Play)
 }
 

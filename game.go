@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -51,9 +53,6 @@ func (game *Game) Update() error {
 	scene := game.GetCurrentScene()
 	scene.Update()
 
-	// FIXME: should work, but doesn't
-	//ebiten.SetScreenClearedEveryFrame(scene.Clearscreen())
-
 	next := scene.GetNext()
 
 	if next != game.CurrentScene {
@@ -64,7 +63,7 @@ func (game *Game) Update() error {
 		game.CurrentScene = next
 	}
 
-	//fmt.Printf("Clear Screen: %t\n", ebiten.IsScreenClearedEveryFrame())
+	fmt.Printf("Clear Screen: %t\n", ebiten.IsScreenClearedEveryFrame())
 
 	return nil
 }

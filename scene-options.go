@@ -60,6 +60,7 @@ func (scene *SceneOptions) Update() error {
 }
 
 func (scene *SceneOptions) Draw(screen *ebiten.Image) {
+	ebiten.SetScreenClearedEveryFrame(false)
 	scene.Ui.Draw(screen)
 }
 

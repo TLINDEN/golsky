@@ -158,16 +158,7 @@ func (scene *ScenePlay) CheckInput() {
 		os.Exit(0)
 	}
 
-	// FIXME: works from here
-	if inpututil.IsKeyJustPressed(ebiten.KeyK) {
-		scene.Clear = !scene.Clear
-		fmt.Printf("Clear: %t\n", scene.Clear)
-		ebiten.SetScreenClearedEveryFrame(scene.Clear)
-	}
-
-	// FIXME: and this does have no effect. WHY?!?!?
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		ebiten.SetScreenClearedEveryFrame(false)
 		scene.SetNext(Menu)
 	}
 
@@ -412,6 +403,8 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
 
 // draw the new grid state
 func (scene *ScenePlay) Draw(screen *ebiten.Image) {
+	ebiten.SetScreenClearedEveryFrame(true)
+
 	// we  fill the whole  screen with  a background color,  the cells
 	// themselfes will be 1px smaller as their nominal size, producing
 	// a nice grey grid with grid lines
