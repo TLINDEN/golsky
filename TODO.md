@@ -9,3 +9,8 @@
   - looks like a race condition
   - obviously  with K there  are more loops before  actually switching
     scenes, which doesn't happen with ESC
+    
+    
+- if grid lines is disabled, they appear anyway in the first frame (then disappear)
+
+- changing options mid-game has no effect in most cases, even after a restart

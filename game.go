@@ -53,22 +53,26 @@ func (game *Game) Update() error {
 	scene := game.GetCurrentScene()
 	scene.Update()
 
-	next := scene.GetNext()
-
-	if next != game.CurrentScene {
-		// make sure we stay on the selected scene
-		scene.ResetNext()
-
-		// finally switch
-		game.CurrentScene = next
-	}
-
 	fmt.Printf("Clear Screen: %t\n", ebiten.IsScreenClearedEveryFrame())
 
 	return nil
 }
 
 func (game *Game) Draw(screen *ebiten.Image) {
+	var nextscene Scene
 	scene := game.GetCurrentScene()
+
+	next := scene.GetNext()
+	if next != game.CurrentScene {
+		scene.ResetNext()
+		game.CurrentScene = next
+		nextscene = game.GetCurrentScene()
+		ebiten.SetScreenClearedEveryFrame(nextscene.Clearscreen())
+	}
+
 	scene.Draw(screen)
+
+	if nextscene != nil {
+		nextscene.Draw(screen)
+	}
 }

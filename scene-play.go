@@ -403,8 +403,6 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
 
 // draw the new grid state
 func (scene *ScenePlay) Draw(screen *ebiten.Image) {
-	ebiten.SetScreenClearedEveryFrame(true)
-
 	// we  fill the whole  screen with  a background color,  the cells
 	// themselfes will be 1px smaller as their nominal size, producing
 	// a nice grey grid with grid lines

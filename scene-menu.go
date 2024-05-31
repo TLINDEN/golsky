@@ -62,7 +62,6 @@ func (scene *SceneMenu) Update() error {
 }
 
 func (scene *SceneMenu) Draw(screen *ebiten.Image) {
-	ebiten.SetScreenClearedEveryFrame(false)
 	scene.Ui.Draw(screen)
 }
 
@@ -82,6 +81,7 @@ func (scene *SceneMenu) Init() {
 
 	random := NewMenuButton("Start with random patterns",
 		func(args *widget.ButtonClickedEventArgs) {
+			scene.Config.Empty = false
 			scene.Config.Restart = true
 			scene.Leave()
 		})
