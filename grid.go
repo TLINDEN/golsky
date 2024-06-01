@@ -78,6 +78,19 @@ func (grid *Grid) FillRandom() {
 	}
 }
 
+func (grid *Grid) Dump() {
+	for y := 0; y < grid.Height; y++ {
+		for x := 0; x < grid.Width; x++ {
+			if grid.Data[y][x] == 1 {
+				fmt.Print("XX")
+			} else {
+				fmt.Print("  ")
+			}
+		}
+		fmt.Println()
+	}
+}
+
 // initialize using a given RLE pattern
 func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 	if pattern != nil {
@@ -95,6 +108,8 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 				}
 			}
 		}
+
+		//grid.Dump()
 	}
 }
 

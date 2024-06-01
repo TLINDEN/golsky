@@ -61,6 +61,10 @@ func NewPlayScene(game *Game, config *Config) Scene {
 	return scene
 }
 
+func (scene *ScenePlay) IsPrimary() bool {
+	return true
+}
+
 func (scene *ScenePlay) GetNext() SceneName {
 	return scene.Next
 }
@@ -71,10 +75,6 @@ func (scene *ScenePlay) ResetNext() {
 
 func (scene *ScenePlay) SetNext(next SceneName) {
 	scene.Next = next
-}
-
-func (scene *ScenePlay) Clearscreen() bool {
-	return true
 }
 
 func (scene *ScenePlay) CheckRule(state int64, neighbors int64) int64 {
@@ -366,7 +366,8 @@ func (scene *ScenePlay) SaveRectRLE() {
 func (scene *ScenePlay) Update() error {
 	if scene.Config.Restart {
 		scene.Config.Restart = false
-		scene.Init()
+		scene.InitGrid(nil)
+		scene.InitCache()
 		return nil
 	}
 
@@ -485,9 +486,11 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 		}
 
 		debug := fmt.Sprintf(
-			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f, Z: %d, Clear: %t  %s",
+			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f, Z: %d, Cam: %.02f,%.02f  %s",
 			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations,
-			scene.Game.Scale, scene.Camera.ZoomFactor, ebiten.IsScreenClearedEveryFrame(), paused)
+			scene.Game.Scale, scene.Camera.ZoomFactor,
+			scene.Camera.Position[0], scene.Camera.Position[1],
+			paused)
 
 		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
 		FontRenderer.Renderer.SetTarget(screen)
@@ -549,6 +552,7 @@ func (scene *ScenePlay) InitGrid(grid *Grid) {
 	gridb := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 	history := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 
+	// startup is delayed until user has selected options
 	grida.FillRandom()
 	grida.Copy(history)
 
@@ -607,7 +611,6 @@ func (scene *ScenePlay) Init() {
 
 	if scene.Config.StateGrid != nil {
 		grid = scene.Config.StateGrid
-
 	}
 
 	scene.Camera = Camera{
@@ -617,12 +620,24 @@ func (scene *ScenePlay) Init() {
 		},
 	}
 
-	scene.World = ebiten.NewImage(scene.Config.ScreenWidth, scene.Config.ScreenHeight)
+	scene.World = ebiten.NewImage(
+		scene.Config.Width*scene.Config.Cellsize,
+		scene.Config.Height*scene.Config.Cellsize,
+	)
+
 	scene.Cache = ebiten.NewImage(scene.Config.ScreenWidth, scene.Config.ScreenHeight)
 
 	scene.InitTiles()
 	scene.InitCache()
-	scene.InitGrid(grid)
+
+	if scene.Config.DelayedStart && !scene.Config.Empty {
+		scene.Config.Empty = true
+		scene.InitGrid(grid)
+		scene.Config.Empty = false
+	} else {
+		scene.InitGrid(grid)
+	}
+
 	scene.InitPattern()
 
 	scene.Index = 0

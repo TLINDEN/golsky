@@ -46,19 +46,20 @@ func (scene *SceneMenu) SetNext(next SceneName) {
 	scene.Next = next
 }
 
-func (scene *SceneMenu) Clearscreen() bool {
-	return false
-}
-
 func (scene *SceneMenu) Update() error {
 	scene.Ui.Update()
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsKeyJustPressed(ebiten.KeyQ) {
+		scene.Config.DelayedStart = false
 		scene.Leave()
 	}
 
 	return nil
 
+}
+
+func (scene *SceneMenu) IsPrimary() bool {
+	return false
 }
 
 func (scene *SceneMenu) Draw(screen *ebiten.Image) {
@@ -102,7 +103,7 @@ func (scene *SceneMenu) Init() {
 	separator2 := NewSeparator()
 	separator3 := NewSeparator()
 
-	cancel := NewMenuButton("Close Window",
+	cancel := NewMenuButton("Back",
 		func(args *widget.ButtonClickedEventArgs) {
 			scene.Leave()
 		})

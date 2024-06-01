@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alecthomas/repr"
 	"github.com/spf13/pflag"
 	"github.com/tlinden/golsky/rle"
 )
@@ -30,6 +29,7 @@ type Config struct {
 	Restart, RestartGrid, RestartCache     bool
 	StartWithMenu                          bool
 	Zoomfactor                             int
+	DelayedStart                           bool // if true game, we wait. like pause but program induced
 
 	// for internal profiling
 	ProfileFile     string
@@ -38,25 +38,27 @@ type Config struct {
 }
 
 const (
-	VERSION = "v0.0.7"
+	VERSION = "v0.0.8"
 	Alive   = 1
 	Dead    = 0
 
-	DEFAULT_WIDTH      = 600
-	DEFAULT_HEIGHT     = 400
-	DEFAULT_CELLSIZE   = 4
-	DEFAULT_ZOOMFACTOR = 150 // FIXME, doesn't work?
-	DEFAULT_GEOM       = "640x384"
+	DEFAULT_GRID_WIDTH  = 600
+	DEFAULT_GRID_HEIGHT = 400
+	DEFAULT_CELLSIZE    = 4
+	DEFAULT_ZOOMFACTOR  = 150
+	DEFAULT_GEOM        = "640x384"
 )
 
 // parse given window geometry and adjust game settings according to it
 func (config *Config) ParseGeom(geom string) error {
-	if geom == "" {
-		config.ScreenWidth = config.Cellsize * config.Width
-		config.ScreenHeight = config.Cellsize * config.Height
-		config.Zoomfactor = 0
-		return nil
-	}
+	// if geom == "" {
+	// 	// config.ScreenWidth = config.Cellsize * config.Width
+	// 	// config.ScreenHeight = config.Cellsize * config.Height
+	// 	config.ScreenWidth = DEFAULT_WIDTH
+	// 	config.ScreenHeight = DEFAULT_HEIGHT
+	// 	config.Zoomfactor = 0
+	// 	return nil
+	// }
 
 	// force a geom
 	geometry := strings.Split(geom, "x")
@@ -80,19 +82,15 @@ func (config *Config) ParseGeom(geom string) error {
 		config.ScreenWidth = width - (width % config.Width)
 		config.ScreenHeight = height - (height % config.Height)
 
-		if config.ScreenWidth == 0 || config.ScreenHeight == 0 {
-			return errors.New("the number of requested cells don't fit into the requested window size")
-		}
+
 	*/
 
 	config.ScreenWidth = width
 	config.ScreenHeight = height
 
-	//config.Cellsize = config.ScreenWidth / config.Width
 	config.Cellsize = DEFAULT_CELLSIZE
 	config.Zoomfactor = DEFAULT_ZOOMFACTOR
 
-	repr.Println(config)
 	return nil
 }
 
@@ -121,6 +119,9 @@ func (config *Config) ParseRLE(rlefile string) error {
 		config.Cellsize = config.ScreenWidth / config.Width
 	}
 
+	fmt.Printf("width: %d, screenwidth: %d, rlewidth: %d, cellsize: %d\n",
+		config.Width, config.ScreenWidth, config.RLE.Width, config.Cellsize)
+
 	// RLE needs an empty grid
 	config.Empty = true
 
@@ -133,7 +134,7 @@ func (config *Config) ParseRLE(rlefile string) error {
 }
 
 // parse a state file, if given, and adjust game settings accordingly
-func (config *Config) ParseStatefile(statefile string) error {
+func (config *Config) ParseStatefile() error {
 	if config.Statefile == "" {
 		return nil
 	}
@@ -175,8 +176,8 @@ func ParseCommandline() (*Config, error) {
 	)
 
 	// commandline params, most configure directly config flags
-	pflag.IntVarP(&config.Width, "width", "W", DEFAULT_WIDTH, "grid width in cells")
-	pflag.IntVarP(&config.Height, "height", "H", DEFAULT_HEIGHT, "grid height in cells")
+	pflag.IntVarP(&config.Width, "width", "W", DEFAULT_GRID_WIDTH, "grid width in cells")
+	pflag.IntVarP(&config.Height, "height", "H", DEFAULT_GRID_HEIGHT, "grid height in cells")
 	pflag.IntVarP(&config.Cellsize, "cellsize", "c", 8, "cell size in pixels")
 	pflag.StringVarP(&geom, "geom", "G", DEFAULT_GEOM, "window geometry in WxH in pixels, overturns -c")
 
@@ -214,12 +215,18 @@ func ParseCommandline() (*Config, error) {
 		return nil, err
 	}
 
+	err = config.ParseStatefile()
+	if err != nil {
+		return nil, err
+	}
+
 	// load  rule from commandline  when no  rule came from  RLE file,
 	// default is B3/S23, aka conways game of life
 	if config.Rule == nil {
 		config.Rule = ParseGameRule(rule)
 	}
 
+	//repr.Println(config)
 	return &config, nil
 }
 

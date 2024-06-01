@@ -69,23 +69,12 @@ func NewSeparator() widget.PreferredSizeLocateableWidget {
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
 			widget.RowLayoutOpts.Padding(widget.Insets{
-				Top:    20,
-				Bottom: 20,
+				Top:    3,
+				Bottom: 0,
 			}))),
 		widget.ContainerOpts.WidgetOpts(
 			widget.WidgetOpts.LayoutData(
 				widget.RowLayoutData{Stretch: true})))
-
-	c.AddChild(widget.NewGraphic(
-		widget.GraphicOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.RowLayoutData{
-			Stretch:   true,
-			MaxHeight: 2,
-		})),
-		widget.GraphicOpts.ImageNineSlice(
-			image.NewNineSliceColor(
-				color.NRGBA{0xdf, 0xf4, 0xff, 0xff})),
-	))
-
 	return c
 }
 
@@ -125,7 +114,7 @@ func NewRowContainer(title string) *RowContainer {
 		),
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
-			widget.RowLayoutOpts.Padding(widget.NewInsetsSimple(20)),
+			widget.RowLayoutOpts.Padding(widget.NewInsetsSimple(8)),
 			widget.RowLayoutOpts.Spacing(0),
 		)),
 		widget.ContainerOpts.BackgroundImage(buttonImageHover),

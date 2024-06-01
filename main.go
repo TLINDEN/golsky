@@ -12,11 +12,12 @@ import (
 )
 
 func main() {
-	dau := true
+	var directstart bool
 
 	if len(os.Args) > 1 {
-		dau = false
+		directstart = true
 	}
+
 	config, err := ParseCommandline()
 	if err != nil {
 		log.Fatal(err)
@@ -28,8 +29,9 @@ func main() {
 	}
 
 	start := Play
-	if dau {
+	if !directstart {
 		start = Menu
+		config.DelayedStart = true
 	}
 	game := NewGame(config, SceneName(start))
 

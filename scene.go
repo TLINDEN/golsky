@@ -14,9 +14,9 @@ type Scene interface {
 	SetNext(SceneName)
 	GetNext() SceneName
 	ResetNext()
-	Clearscreen() bool
 	Update() error
 	Draw(screen *ebiten.Image)
+	IsPrimary() bool // if true, this scene will be always drawn
 }
 
 const (
