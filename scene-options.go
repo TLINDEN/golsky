@@ -44,7 +44,7 @@ func (scene *SceneOptions) SetNext(next SceneName) {
 	scene.Next = next
 }
 
-func (scene *SceneOptions) Clearscreen() bool {
+func (scene *SceneOptions) IsPrimary() bool {
 	return false
 }
 

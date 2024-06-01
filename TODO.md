@@ -1,16 +1,18 @@
 - add all other options like size etc
 
-- Clear screen problem:
-  - it works when hitting the K key, immediately
-  - its being turned off correctly when entering menu and on when leaving it
-  - but  regardless of the setting,  after turning it off,  the engine
-    seems to run a couple of  ticks with the old setting before switching
-    scenes
-  - looks like a race condition
-  - obviously  with K there  are more loops before  actually switching
-    scenes, which doesn't happen with ESC
-    
-    
 - if grid lines is disabled, they appear anyway in the first frame (then disappear)
 
 - changing options mid-game has no effect in most cases, even after a restart
+
+- RLE file loading works but pattern is barely visible
+
+- Statefile loading does not work correclty anymore. With larger grids
+  everything  is empty.  With square  grids part  of the  grid is  cut
+  off. Smaller grids load though
+  
+- Same thing  with RLE files: with smaller grid  size, RLE file shows,
+  but with larger (or default) grid size, its invisible
+  
+-  gridlines  vanish  if  starting  in menu  mode,  after  starting  a
+  game.  They are  there in  all manual  modes and  on startup  before
+  leaving the menu

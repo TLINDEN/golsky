@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -53,26 +51,29 @@ func (game *Game) Update() error {
 	scene := game.GetCurrentScene()
 	scene.Update()
 
-	fmt.Printf("Clear Screen: %t\n", ebiten.IsScreenClearedEveryFrame())
+	next := scene.GetNext()
+	if next != game.CurrentScene {
+		scene.ResetNext()
+		game.CurrentScene = next
+	}
 
 	return nil
 }
 
 func (game *Game) Draw(screen *ebiten.Image) {
-	var nextscene Scene
+	// first draw primary scene[s], although there are only 1
+	for current, scene := range game.Scenes {
+		if scene.IsPrimary() {
+			// primary scenes always draw
+			scene.Draw(screen)
+
+			if current == game.CurrentScene {
+				// avoid to redraw it in the next step
+				return
+			}
+		}
+	}
+
 	scene := game.GetCurrentScene()
-
-	next := scene.GetNext()
-	if next != game.CurrentScene {
-		scene.ResetNext()
-		game.CurrentScene = next
-		nextscene = game.GetCurrentScene()
-		ebiten.SetScreenClearedEveryFrame(nextscene.Clearscreen())
-	}
-
 	scene.Draw(screen)
-
-	if nextscene != nil {
-		nextscene.Draw(screen)
-	}
 }
