@@ -205,7 +205,7 @@ func ParseCommandline() (*Config, error) {
 	pflag.BoolVarP(&config.ShowVersion, "version", "v", false, "show version")
 	pflag.BoolVarP(&config.Paused, "paused", "p", false, "do not start simulation (use space to start)")
 	pflag.BoolVarP(&config.Debug, "debug", "d", false, "show debug info")
-	pflag.BoolVarP(&config.ShowGrid, "show-grid", "g", true, "draw grid lines")
+	pflag.BoolVarP(&config.ShowGrid, "show-grid", "g", false, "draw grid lines")
 	pflag.BoolVarP(&config.Empty, "empty", "e", false, "start with an empty screen")
 	pflag.BoolVarP(&config.Invert, "invert", "i", false, "invert colors (dead cell: black)")
 	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
