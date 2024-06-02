@@ -18,6 +18,10 @@ type Images struct {
 	Black, White, Age1, Age2, Age3, Age4, Old *ebiten.Image
 }
 
+const (
+	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02fZoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s"
+)
+
 type ScenePlay struct {
 	Game   *Game
 	Config *Config
@@ -396,7 +400,7 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
 	x := int(worldX) / scene.Config.Cellsize
 	y := int(worldY) / scene.Config.Cellsize
 
-	if x > -1 && y > -1 {
+	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
 		scene.Grids[scene.Index].Data[y][x] = alive
 		scene.History.Data[y][x] = 1
 	}
@@ -485,11 +489,13 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 			paused = "-- paused --"
 		}
 
+		x, y := ebiten.CursorPosition()
 		debug := fmt.Sprintf(
-			"FPS: %0.2f, TPG: %d, Mem: %0.2fMB, Gen: %d, Scale: %.02f, Z: %d, Cam: %.02f,%.02f  %s",
+			DEBUG_FORMAT,
 			ebiten.ActualTPS(), scene.TPG, GetMem(), scene.Generations,
 			scene.Game.Scale, scene.Camera.ZoomFactor,
 			scene.Camera.Position[0], scene.Camera.Position[1],
+			x, y,
 			paused)
 
 		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
@@ -503,6 +509,7 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 
 		fmt.Println(debug)
 	}
+
 }
 
 // load a pre-computed pattern from RLE file
@@ -648,6 +655,9 @@ func (scene *ScenePlay) Init() {
 	if scene.Config.Zoomfactor < 0 || scene.Config.Zoomfactor > 0 {
 		scene.Camera.ZoomFactor = scene.Config.Zoomfactor
 	}
+
+	scene.Camera.Position[0] = scene.Config.InitialCamPos[0]
+	scene.Camera.Position[1] = scene.Config.InitialCamPos[1]
 }
 
 // count the living neighbors of a cell
