@@ -632,7 +632,10 @@ func (scene *ScenePlay) Init() {
 		scene.Config.Height*scene.Config.Cellsize,
 	)
 
-	scene.Cache = ebiten.NewImage(scene.Config.ScreenWidth, scene.Config.ScreenHeight)
+	scene.Cache = ebiten.NewImage(
+		scene.Config.Width*scene.Config.Cellsize,
+		scene.Config.Height*scene.Config.Cellsize,
+	)
 
 	scene.InitTiles()
 	scene.InitCache()
