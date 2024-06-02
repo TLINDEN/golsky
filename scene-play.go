@@ -19,7 +19,7 @@ type Images struct {
 }
 
 const (
-	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02fZoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s"
+	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02f, Zoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s"
 )
 
 type ScenePlay struct {

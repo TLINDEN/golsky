@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alecthomas/repr"
 	"github.com/spf13/pflag"
 	"github.com/tlinden/golsky/rle"
 )
@@ -80,14 +79,15 @@ func (config *Config) ParseGeom(geom string) error {
 	// size  is smaller than  the screen  in a centered  position, but
 	// it's zero if it's equal or larger than the screen.
 	config.InitialCamPos = make([]float64, 2)
-	if config.Width*config.Cellsize < config.ScreenWidth {
-		config.InitialCamPos[0] = float64(((config.ScreenWidth - (config.Width * config.Cellsize)) / 2) * -1)
-		repr.Println("x", config.InitialCamPos[0])
+
+	config.InitialCamPos[0] = float64(((config.ScreenWidth - (config.Width * config.Cellsize)) / 2) * -1)
+	if config.Width*config.Cellsize >= config.ScreenWidth {
+		// must be positive if world wider than screen
+		config.InitialCamPos[0] = math.Abs(config.InitialCamPos[0])
 	}
 
 	if config.Height*config.Cellsize > config.ScreenHeight {
 		config.InitialCamPos[1] = math.Abs(float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2)))
-		repr.Println("y", config.InitialCamPos[1])
 	}
 
 	return nil
