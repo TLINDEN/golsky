@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"runtime/pprof"
 	"strconv"
 	"strings"
 
+	"github.com/alecthomas/repr"
 	"github.com/spf13/pflag"
 	"github.com/tlinden/golsky/rle"
 )
@@ -52,15 +54,6 @@ const (
 
 // parse given window geometry and adjust game settings according to it
 func (config *Config) ParseGeom(geom string) error {
-	// if geom == "" {
-	// 	// config.ScreenWidth = config.Cellsize * config.Width
-	// 	// config.ScreenHeight = config.Cellsize * config.Height
-	// 	config.ScreenWidth = DEFAULT_WIDTH
-	// 	config.ScreenHeight = DEFAULT_HEIGHT
-	// 	config.Zoomfactor = 0
-	// 	return nil
-	// }
-
 	// force a geom
 	geometry := strings.Split(geom, "x")
 	if len(geometry) != 2 {
@@ -77,15 +70,6 @@ func (config *Config) ParseGeom(geom string) error {
 		return errors.New("failed to parse height, expecting integer")
 	}
 
-	/*
-		// adjust dimensions, account for  grid width+height so that cells
-		// fit into window
-		config.ScreenWidth = width - (width % config.Width)
-		config.ScreenHeight = height - (height % config.Height)
-
-
-	*/
-
 	config.ScreenWidth = width
 	config.ScreenHeight = height
 
@@ -98,10 +82,12 @@ func (config *Config) ParseGeom(geom string) error {
 	config.InitialCamPos = make([]float64, 2)
 	if config.Width*config.Cellsize < config.ScreenWidth {
 		config.InitialCamPos[0] = float64(((config.ScreenWidth - (config.Width * config.Cellsize)) / 2) * -1)
+		repr.Println("x", config.InitialCamPos[0])
 	}
 
-	if config.Height*config.Cellsize < config.ScreenHeight {
-		config.InitialCamPos[1] = float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2) * -1)
+	if config.Height*config.Cellsize > config.ScreenHeight {
+		config.InitialCamPos[1] = math.Abs(float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2)))
+		repr.Println("y", config.InitialCamPos[1])
 	}
 
 	return nil
