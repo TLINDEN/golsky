@@ -29,6 +29,7 @@ type Config struct {
 	Restart, RestartGrid, RestartCache     bool
 	StartWithMenu                          bool
 	Zoomfactor                             int
+	InitialCamPos                          []float64
 	DelayedStart                           bool // if true game, we wait. like pause but program induced
 
 	// for internal profiling
@@ -90,6 +91,18 @@ func (config *Config) ParseGeom(geom string) error {
 
 	config.Cellsize = DEFAULT_CELLSIZE
 	config.Zoomfactor = DEFAULT_ZOOMFACTOR
+
+	// calculate the initial cam pos. It is negative if the total grid
+	// size  is smaller than  the screen  in a centered  position, but
+	// it's zero if it's equal or larger than the screen.
+	config.InitialCamPos = make([]float64, 2)
+	if config.Width*config.Cellsize < config.ScreenWidth {
+		config.InitialCamPos[0] = float64(((config.ScreenWidth - (config.Width * config.Cellsize)) / 2) * -1)
+	}
+
+	if config.Height*config.Cellsize < config.ScreenHeight {
+		config.InitialCamPos[1] = float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2) * -1)
+	}
 
 	return nil
 }
