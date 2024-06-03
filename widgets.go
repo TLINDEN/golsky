@@ -64,12 +64,12 @@ func NewCheckbox(
 	)
 }
 
-func NewSeparator() widget.PreferredSizeLocateableWidget {
+func NewSeparator(padding int) widget.PreferredSizeLocateableWidget {
 	c := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
 			widget.RowLayoutOpts.Padding(widget.Insets{
-				Top:    3,
+				Top:    padding,
 				Bottom: 0,
 			}))),
 		widget.ContainerOpts.WidgetOpts(

@@ -14,6 +14,7 @@ type SceneMenu struct {
 	Game      *Game
 	Config    *Config
 	Next      SceneName
+	Prev      SceneName
 	Whoami    SceneName
 	Ui        *ebitenui.UI
 	FontColor color.RGBA
@@ -36,6 +37,10 @@ func NewMenuScene(game *Game, config *Config) Scene {
 
 func (scene *SceneMenu) GetNext() SceneName {
 	return scene.Next
+}
+
+func (scene *SceneMenu) SetPrevious(prev SceneName) {
+	scene.Prev = prev
 }
 
 func (scene *SceneMenu) ResetNext() {
@@ -99,9 +104,9 @@ func (scene *SceneMenu) Init() {
 			scene.SetNext(Options)
 		})
 
-	separator1 := NewSeparator()
-	separator2 := NewSeparator()
-	separator3 := NewSeparator()
+	separator1 := NewSeparator(3)
+	separator2 := NewSeparator(3)
+	separator3 := NewSeparator(10)
 
 	cancel := NewMenuButton("Back",
 		func(args *widget.ButtonClickedEventArgs) {

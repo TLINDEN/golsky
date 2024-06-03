@@ -30,6 +30,7 @@ type Config struct {
 	Restart, RestartGrid, RestartCache     bool
 	StartWithMenu                          bool
 	Zoomfactor                             int
+	ZoomOutFactor                          int
 	InitialCamPos                          []float64
 	DelayedStart                           bool // if true game, we wait. like pause but program induced
 
@@ -50,6 +51,40 @@ const (
 	DEFAULT_ZOOMFACTOR  = 150
 	DEFAULT_GEOM        = "640x384"
 )
+
+func (config *Config) SetupCamera() {
+	config.Zoomfactor = DEFAULT_ZOOMFACTOR
+
+	// calculate the initial cam pos. It is negative if the total grid
+	// size  is smaller than  the screen  in a centered  position, but
+	// it's zero if it's equal or larger than the screen.
+	config.InitialCamPos = make([]float64, 2)
+
+	config.InitialCamPos[0] = float64(((config.ScreenWidth - (config.Width * config.Cellsize)) / 2) * -1)
+	if config.Width*config.Cellsize >= config.ScreenWidth {
+		// must be positive if world wider than screen
+		config.InitialCamPos[0] = math.Abs(config.InitialCamPos[0])
+	}
+
+	// for Y we need only positive (really?)
+	if config.Height*config.Cellsize > config.ScreenHeight {
+		config.InitialCamPos[1] = math.Abs(
+			float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2)))
+	}
+
+	// Calculate  zoom out factor, which  shows 100% of the  world. We
+	// need to reverse math.Pow(1.01,  $zoomfactor) to get the correct
+	// percentage of  the world to show.  I.e: with  a ScreenHeight of
+	// 384px and a world of 800px the factor to show 100% of the world
+	// is  -75: math.Log(384/800) / math.Log(1.01).  The 1.01 constant
+	// is being used in camera.go:worldMatrix().
+
+	// FIXME: determine if the diff is larger on width, then calc with
+	// widh instead of height
+	config.ZoomOutFactor = int(
+		math.Log(float64(config.ScreenHeight)/(float64(config.Height)*float64(config.Cellsize))) /
+			math.Log(1.01))
+}
 
 // parse given window geometry and adjust game settings according to it
 func (config *Config) ParseGeom(geom string) error {
@@ -73,22 +108,6 @@ func (config *Config) ParseGeom(geom string) error {
 	config.ScreenHeight = height
 
 	config.Cellsize = DEFAULT_CELLSIZE
-	config.Zoomfactor = DEFAULT_ZOOMFACTOR
-
-	// calculate the initial cam pos. It is negative if the total grid
-	// size  is smaller than  the screen  in a centered  position, but
-	// it's zero if it's equal or larger than the screen.
-	config.InitialCamPos = make([]float64, 2)
-
-	config.InitialCamPos[0] = float64(((config.ScreenWidth - (config.Width * config.Cellsize)) / 2) * -1)
-	if config.Width*config.Cellsize >= config.ScreenWidth {
-		// must be positive if world wider than screen
-		config.InitialCamPos[0] = math.Abs(config.InitialCamPos[0])
-	}
-
-	if config.Height*config.Cellsize > config.ScreenHeight {
-		config.InitialCamPos[1] = math.Abs(float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2)))
-	}
 
 	return nil
 }
@@ -145,7 +164,6 @@ func (config *Config) ParseStatefile() error {
 
 	config.Width = grid.Width
 	config.Height = grid.Height
-	config.Cellsize = config.ScreenWidth / config.Width
 	config.StateGrid = grid
 
 	return nil
@@ -224,6 +242,8 @@ func ParseCommandline() (*Config, error) {
 	if config.Rule == nil {
 		config.Rule = ParseGameRule(rule)
 	}
+
+	config.SetupCamera()
 
 	//repr.Println(config)
 	return &config, nil

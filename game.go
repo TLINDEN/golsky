@@ -53,6 +53,7 @@ func (game *Game) Update() error {
 
 	next := scene.GetNext()
 	if next != game.CurrentScene {
+		game.Scenes[next].SetPrevious(game.CurrentScene)
 		scene.ResetNext()
 		game.CurrentScene = next
 	}

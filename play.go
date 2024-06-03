@@ -26,6 +26,7 @@ type ScenePlay struct {
 	Game   *Game
 	Config *Config
 	Next   SceneName
+	Prev   SceneName
 	Whoami SceneName
 
 	Clear bool
@@ -71,6 +72,10 @@ func (scene *ScenePlay) IsPrimary() bool {
 
 func (scene *ScenePlay) GetNext() SceneName {
 	return scene.Next
+}
+
+func (scene *ScenePlay) SetPrevious(prev SceneName) {
+	scene.Prev = prev
 }
 
 func (scene *ScenePlay) ResetNext() {
@@ -164,6 +169,10 @@ func (scene *ScenePlay) CheckInput() {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		scene.SetNext(Menu)
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyO) {
+		scene.SetNext(Options)
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
@@ -625,6 +634,12 @@ func (scene *ScenePlay) Init() {
 			float64(scene.Config.ScreenWidth),
 			float64(scene.Config.ScreenHeight),
 		},
+		InitialZoomFactor: scene.Config.Zoomfactor,
+		InitialPosition: f64.Vec2{
+			scene.Config.InitialCamPos[0],
+			scene.Config.InitialCamPos[1],
+		},
+		ZoomOutFactor: scene.Config.ZoomOutFactor,
 	}
 
 	scene.World = ebiten.NewImage(
@@ -659,8 +674,7 @@ func (scene *ScenePlay) Init() {
 		scene.Camera.ZoomFactor = scene.Config.Zoomfactor
 	}
 
-	scene.Camera.Position[0] = scene.Config.InitialCamPos[0]
-	scene.Camera.Position[1] = scene.Config.InitialCamPos[1]
+	scene.Camera.Setup()
 }
 
 // count the living neighbors of a cell

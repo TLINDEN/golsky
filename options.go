@@ -13,6 +13,7 @@ type SceneOptions struct {
 	Game      *Game
 	Config    *Config
 	Next      SceneName
+	Prev      SceneName
 	Whoami    SceneName
 	Ui        *ebitenui.UI
 	FontColor color.RGBA
@@ -34,6 +35,10 @@ func NewOptionsScene(game *Game, config *Config) Scene {
 
 func (scene *SceneOptions) GetNext() SceneName {
 	return scene.Next
+}
+
+func (scene *SceneOptions) SetPrevious(prev SceneName) {
+	scene.Prev = prev
 }
 
 func (scene *SceneOptions) ResetNext() {
@@ -100,11 +105,11 @@ func (scene *SceneOptions) Init() {
 		})
 	scene.SetInitialValue(gridlines, scene.Config.ShowGrid)
 
-	separator := NewSeparator()
+	separator := NewSeparator(3)
 
 	cancel := NewMenuButton("Close",
 		func(args *widget.ButtonClickedEventArgs) {
-			scene.SetNext(Menu)
+			scene.SetNext(scene.Prev)
 		})
 
 	rowContainer.AddChild(pause)

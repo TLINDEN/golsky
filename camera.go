@@ -1,3 +1,5 @@
+// this comes from the camera example but I enhanced it a little bit
+
 package main
 
 import (
@@ -9,9 +11,12 @@ import (
 )
 
 type Camera struct {
-	ViewPort   f64.Vec2
-	Position   f64.Vec2
-	ZoomFactor int
+	ViewPort          f64.Vec2
+	Position          f64.Vec2
+	ZoomFactor        int
+	InitialZoomFactor int
+	InitialPosition   f64.Vec2
+	ZoomOutFactor     int
 }
 
 func (c *Camera) String() string {
@@ -32,15 +37,17 @@ func (c *Camera) worldMatrix() ebiten.GeoM {
 	m := ebiten.GeoM{}
 	m.Translate(-c.Position[0], -c.Position[1])
 
+	viewportCenter := c.viewportCenter()
+
 	// We want to scale and rotate around center of image / screen
-	m.Translate(-c.viewportCenter()[0], -c.viewportCenter()[1])
+	m.Translate(-viewportCenter[0], -viewportCenter[1])
 
 	m.Scale(
 		math.Pow(1.01, float64(c.ZoomFactor)),
 		math.Pow(1.01, float64(c.ZoomFactor)),
 	)
 
-	m.Translate(c.viewportCenter()[0], c.viewportCenter()[1])
+	m.Translate(viewportCenter[0], viewportCenter[1])
 	return m
 }
 
@@ -61,8 +68,14 @@ func (c *Camera) ScreenToWorld(posX, posY int) (float64, float64) {
 	}
 }
 
+func (c *Camera) Setup() {
+	c.Position[0] = c.InitialPosition[0]
+	c.Position[1] = c.InitialPosition[1]
+	c.ZoomFactor = c.InitialZoomFactor
+}
+
 func (c *Camera) Reset() {
-	c.Position[0] = 0
-	c.Position[1] = 0
-	c.ZoomFactor = 0
+	c.Position[0] = c.InitialPosition[0]
+	c.Position[1] = c.InitialPosition[1]
+	c.ZoomFactor = c.ZoomOutFactor
 }

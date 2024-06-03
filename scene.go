@@ -13,6 +13,7 @@ type SceneName int
 type Scene interface {
 	SetNext(SceneName)
 	GetNext() SceneName
+	SetPrevious(SceneName)
 	ResetNext()
 	Update() error
 	Draw(screen *ebiten.Image)
