@@ -49,7 +49,10 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (game *Game) Update() error {
 	scene := game.GetCurrentScene()
-	scene.Update()
+
+	if quit := scene.Update(); quit != nil {
+		return quit
+	}
 
 	next := scene.GetNext()
 	if next != game.CurrentScene {

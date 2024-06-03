@@ -95,7 +95,7 @@ func (scene *SceneOptions) Init() {
 
 	invert := NewCheckbox("Invert",
 		func(args *widget.CheckboxChangedEventArgs) {
-			scene.Config.Invert = true
+			scene.Config.ToggleInvert()
 		})
 	scene.SetInitialValue(invert, scene.Config.Invert)
 
@@ -104,6 +104,12 @@ func (scene *SceneOptions) Init() {
 			scene.Config.ToggleGridlines()
 		})
 	scene.SetInitialValue(gridlines, scene.Config.ShowGrid)
+
+	evolution := NewCheckbox("Show evolution traces",
+		func(args *widget.CheckboxChangedEventArgs) {
+			scene.Config.ToggleEvolution()
+		})
+	scene.SetInitialValue(evolution, scene.Config.ShowEvolution)
 
 	separator := NewSeparator(3)
 
@@ -116,6 +122,7 @@ func (scene *SceneOptions) Init() {
 	rowContainer.AddChild(debugging)
 	rowContainer.AddChild(invert)
 	rowContainer.AddChild(gridlines)
+	rowContainer.AddChild(evolution)
 	rowContainer.AddChild(separator)
 	rowContainer.AddChild(cancel)
 

@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -162,11 +161,15 @@ func (scene *ScenePlay) Reset() {
 }
 
 // check user input
-func (scene *ScenePlay) CheckInput() {
+func (scene *ScenePlay) CheckExit() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
-		os.Exit(0)
+		return ebiten.Termination
 	}
 
+	return nil
+}
+
+func (scene *ScenePlay) CheckInput() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		scene.SetNext(Menu)
 	}
@@ -176,7 +179,6 @@ func (scene *ScenePlay) CheckInput() {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
-		fmt.Println("mark mode on")
 		scene.Config.Markmode = true
 		scene.Config.Paused = true
 	}
@@ -297,6 +299,10 @@ func (scene *ScenePlay) CheckMarkInput() {
 		return
 	}
 
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		scene.Config.Markmode = false
+	}
+
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
 		if !scene.MarkTaken {
 			scene.Mark = scene.GetWorldCursorPos()
@@ -389,6 +395,10 @@ func (scene *ScenePlay) Update() error {
 		scene.InitTiles()
 		scene.InitCache()
 		return nil
+	}
+
+	if quit := scene.CheckExit(); quit != nil {
+		return quit
 	}
 
 	scene.CheckInput()
@@ -496,6 +506,10 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 		paused := ""
 		if scene.Config.Paused {
 			paused = "-- paused --"
+		}
+
+		if scene.Config.Markmode {
+			paused = "-- mark --"
 		}
 
 		x, y := ebiten.CursorPosition()

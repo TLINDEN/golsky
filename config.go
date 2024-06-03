@@ -267,3 +267,7 @@ func (config *Config) ToggleGridlines() {
 	config.ShowGrid = !config.ShowGrid
 	config.RestartCache = true
 }
+
+func (config *Config) ToggleEvolution() {
+	config.ShowEvolution = !config.ShowEvolution
+}
