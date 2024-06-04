@@ -3,3 +3,5 @@
 - changing options mid-game has no effect in most cases, even after a restart
 
 - initial zoom pos doesnt work for small grids
+
+- fix generation count: starts even when delayedstart is on or on restart

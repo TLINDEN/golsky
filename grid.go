@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alecthomas/repr"
 	"github.com/tlinden/golsky/rle"
 )
 
@@ -114,7 +113,7 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 }
 
 // load a lif file parameters like R and P are not supported yet
-func LoadState(filename string) (*Grid, error) {
+func LoadLIF(filename string) (*rle.RLE, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -126,12 +125,26 @@ func LoadState(filename string) (*Grid, error) {
 
 	gothead := false
 
-	grid := &Grid{}
+	grid := &rle.RLE{}
 
 	for scanner.Scan() {
-		items := strings.Split(scanner.Text(), "")
+		line := scanner.Text()
+		items := strings.Split(line, "")
 
-		if len(items) > 0 && (items[0] == "#") {
+		if len(items) < 0 {
+			continue
+		}
+
+		if strings.Contains(line, "# r") {
+			parts := strings.Split(line, " ")
+			if len(parts) == 2 {
+				grid.Rule = parts[1]
+			}
+
+			continue
+		}
+
+		if items[0] == "#" {
 			if gothead {
 				break
 			}
@@ -141,7 +154,7 @@ func LoadState(filename string) (*Grid, error) {
 
 		gothead = true
 
-		row := make([]int64, len(items))
+		row := make([]int, len(items))
 
 		for idx, item := range items {
 			switch item {
@@ -156,15 +169,14 @@ func LoadState(filename string) (*Grid, error) {
 			}
 		}
 
-		repr.Println(row)
-		grid.Data = append(grid.Data, row)
+		grid.Pattern = append(grid.Pattern, row)
 	}
 
 	// sanity check the grid
 	explen := 0
 	rows := 0
 	first := true
-	for _, row := range grid.Data {
+	for _, row := range grid.Pattern {
 		length := len(row)
 
 		if first {
@@ -184,7 +196,6 @@ func LoadState(filename string) (*Grid, error) {
 	grid.Width = explen
 	grid.Height = rows
 
-	grid.Dump()
 	return grid, nil
 }
 

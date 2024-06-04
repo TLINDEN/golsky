@@ -112,20 +112,33 @@ func (config *Config) ParseGeom(geom string) error {
 	return nil
 }
 
-// check if we have  been given an RLE file to load,  then load it and
-// adjust game settings accordingly
+// check if we have  been given an RLE or LIF file  to load, then load
+// it and adjust game settings accordingly
 func (config *Config) ParseRLE(rlefile string) error {
 	if rlefile == "" {
 		return nil
 	}
 
-	rleobj, err := rle.GetRLE(rlefile)
-	if err != nil {
-		return err
+	var rleobj *rle.RLE
+
+	if strings.HasSuffix(rlefile, ".lif") {
+		lifobj, err := LoadLIF(rlefile)
+		if err != nil {
+			return err
+		}
+
+		rleobj = lifobj
+	} else {
+		rleobject, err := rle.GetRLE(rlefile)
+		if err != nil {
+			return err
+		}
+
+		rleobj = rleobject
 	}
 
 	if rleobj == nil {
-		return errors.New("failed to load RLE file (uncatched module error)")
+		return errors.New("failed to load pattern file (uncatched module error)")
 	}
 
 	config.RLE = rleobj
@@ -147,24 +160,6 @@ func (config *Config) ParseRLE(rlefile string) error {
 	if config.RLE.Rule != "" {
 		config.Rule = ParseGameRule(config.RLE.Rule)
 	}
-
-	return nil
-}
-
-// parse a state file, if given, and adjust game settings accordingly
-func (config *Config) ParseStatefile() error {
-	if config.Statefile == "" {
-		return nil
-	}
-
-	grid, err := LoadState(config.Statefile)
-	if err != nil {
-		return fmt.Errorf("failed to load game state: %s", err)
-	}
-
-	config.Width = grid.Width
-	config.Height = grid.Height
-	config.StateGrid = grid
 
 	return nil
 }
@@ -203,8 +198,7 @@ func ParseCommandline() (*Config, error) {
 		"game speed: the higher the slower (default: 10)")
 
 	pflag.StringVarP(&rule, "rule", "r", "B3/S23", "game rule")
-	pflag.StringVarP(&rlefile, "rle-file", "f", "", "RLE pattern file")
-	pflag.StringVarP(&config.Statefile, "load-state-file", "l", "", "game state file")
+	pflag.StringVarP(&rlefile, "pattern-file", "f", "", "RLE or LIF pattern file")
 
 	pflag.BoolVarP(&config.ShowVersion, "version", "v", false, "show version")
 	pflag.BoolVarP(&config.Paused, "paused", "p", false, "do not start simulation (use space to start)")
@@ -232,11 +226,6 @@ func ParseCommandline() (*Config, error) {
 		return nil, err
 	}
 
-	err = config.ParseStatefile()
-	if err != nil {
-		return nil, err
-	}
-
 	// load  rule from commandline  when no  rule came from  RLE file,
 	// default is B3/S23, aka conways game of life
 	if config.Rule == nil {
@@ -254,7 +243,6 @@ func (config *Config) TogglePaused() {
 }
 
 func (config *Config) ToggleDebugging() {
-	fmt.Println("DEBUG TOGGLED")
 	config.Debug = !config.Debug
 }
 

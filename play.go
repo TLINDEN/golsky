@@ -156,7 +156,7 @@ func (scene *ScenePlay) UpdateCells() {
 
 func (scene *ScenePlay) Reset() {
 	scene.Config.Paused = true
-	scene.InitGrid(nil)
+	scene.InitGrid()
 	scene.Config.Paused = false
 }
 
@@ -385,7 +385,7 @@ func (scene *ScenePlay) SaveRectRLE() {
 func (scene *ScenePlay) Update() error {
 	if scene.Config.Restart {
 		scene.Config.Restart = false
-		scene.InitGrid(nil)
+		scene.InitGrid()
 		scene.InitCache()
 		return nil
 	}
@@ -565,19 +565,7 @@ func (scene *ScenePlay) InitCache() {
 }
 
 // initialize grid[s], either using pre-computed from state or rle file, or random
-func (scene *ScenePlay) InitGrid(grid *Grid) {
-	if grid != nil {
-		// use pre-loaded grid
-		scene.Grids = []*Grid{
-			grid,
-			NewGrid(grid.Width, grid.Height, 0, false),
-		}
-
-		scene.History = NewGrid(grid.Width, grid.Height, 0, false)
-
-		return
-	}
-
+func (scene *ScenePlay) InitGrid() {
 	grida := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 	gridb := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 	history := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
@@ -637,12 +625,6 @@ func (scene *ScenePlay) InitTiles() {
 
 func (scene *ScenePlay) Init() {
 	// setup the scene
-	var grid *Grid
-
-	if scene.Config.StateGrid != nil {
-		grid = scene.Config.StateGrid
-	}
-
 	scene.Camera = Camera{
 		ViewPort: f64.Vec2{
 			float64(scene.Config.ScreenWidth),
@@ -671,10 +653,10 @@ func (scene *ScenePlay) Init() {
 
 	if scene.Config.DelayedStart && !scene.Config.Empty {
 		scene.Config.Empty = true
-		scene.InitGrid(grid)
+		scene.InitGrid()
 		scene.Config.Empty = false
 	} else {
-		scene.InitGrid(grid)
+		scene.InitGrid()
 	}
 
 	scene.InitPattern()
