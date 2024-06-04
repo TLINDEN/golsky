@@ -66,10 +66,10 @@ func (config *Config) SetupCamera() {
 		config.InitialCamPos[0] = math.Abs(config.InitialCamPos[0])
 	}
 
-	// for Y we need only positive (really?)
+	// same for Y
+	config.InitialCamPos[1] = float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2) * -1)
 	if config.Height*config.Cellsize > config.ScreenHeight {
-		config.InitialCamPos[1] = math.Abs(
-			float64(((config.ScreenHeight - (config.Height * config.Cellsize)) / 2)))
+		config.InitialCamPos[1] = math.Abs(config.InitialCamPos[1])
 	}
 
 	// Calculate  zoom out factor, which  shows 100% of the  world. We
@@ -80,7 +80,7 @@ func (config *Config) SetupCamera() {
 	// is being used in camera.go:worldMatrix().
 
 	// FIXME: determine if the diff is larger on width, then calc with
-	// widh instead of height
+	// width instead of height
 	config.ZoomOutFactor = int(
 		math.Log(float64(config.ScreenHeight)/(float64(config.Height)*float64(config.Cellsize))) /
 			math.Log(1.01))

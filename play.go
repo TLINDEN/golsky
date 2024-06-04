@@ -385,6 +385,7 @@ func (scene *ScenePlay) SaveRectRLE() {
 func (scene *ScenePlay) Update() error {
 	if scene.Config.Restart {
 		scene.Config.Restart = false
+		scene.Generations = 0
 		scene.InitGrid()
 		scene.InitCache()
 		return nil
@@ -713,8 +714,8 @@ func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
 		tile,
 		float32(1),
 		float32(1),
-		float32(cellsize-1),
-		float32(cellsize-1),
+		float32(cellsize),
+		float32(cellsize),
 		col, false,
 	)
 }
