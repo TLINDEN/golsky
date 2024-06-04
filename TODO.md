@@ -1,6 +1,9 @@
 - add all other options like size etc
 
-
+- add performance measurements, see:
+  DrawTriangles: https://github.com/TLINDEN/testgol
+  WritePixels:   https://github.com/TLINDEN/testgol/tree/wrpixels
+  
 - Patterns:
 
 A   Catagolue   textcensus   of,  say,   period-2   oscillators   from
