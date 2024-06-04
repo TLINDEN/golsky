@@ -111,6 +111,12 @@ func (scene *SceneOptions) Init() {
 		})
 	scene.SetInitialValue(evolution, scene.Config.ShowEvolution)
 
+	wrap := NewCheckbox("Wrap around edges",
+		func(args *widget.CheckboxChangedEventArgs) {
+			scene.Config.ToggleWrap()
+		})
+	scene.SetInitialValue(wrap, scene.Config.Wrap)
+
 	separator := NewSeparator(3)
 
 	cancel := NewMenuButton("Close",
@@ -123,6 +129,7 @@ func (scene *SceneOptions) Init() {
 	rowContainer.AddChild(invert)
 	rowContainer.AddChild(gridlines)
 	rowContainer.AddChild(evolution)
+	rowContainer.AddChild(wrap)
 	rowContainer.AddChild(separator)
 	rowContainer.AddChild(cancel)
 

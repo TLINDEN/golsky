@@ -259,3 +259,7 @@ func (config *Config) ToggleGridlines() {
 func (config *Config) ToggleEvolution() {
 	config.ShowEvolution = !config.ShowEvolution
 }
+
+func (config *Config) ToggleWrap() {
+	config.Wrap = !config.Wrap
+}
