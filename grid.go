@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/alecthomas/repr"
 	"github.com/tlinden/golsky/rle"
 )
 
@@ -113,29 +113,7 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 	}
 }
 
-// save  the contents  of  the  whole grid  as  a  simple mcell  alike
-// file. One line per row, 0 for dead and 1 for life cell.
-func (grid *Grid) SaveState(filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("failed to open state file: %w", err)
-	}
-	defer file.Close()
-
-	for y := range grid.Data {
-		for _, cell := range grid.Data[y] {
-			_, err := file.WriteString(strconv.FormatInt(cell, 10))
-			if err != nil {
-				return fmt.Errorf("failed to write to state file: %w", err)
-			}
-		}
-		file.WriteString("\n")
-	}
-
-	return nil
-}
-
-// the reverse of the above, load a mcell file
+// load a lif file parameters like R and P are not supported yet
 func LoadState(filename string) (*Grid, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
@@ -146,25 +124,39 @@ func LoadState(filename string) (*Grid, error) {
 
 	scanner.Split(bufio.ScanLines)
 
+	gothead := false
+
 	grid := &Grid{}
 
 	for scanner.Scan() {
 		items := strings.Split(scanner.Text(), "")
+
+		if len(items) > 0 && (items[0] == "#") {
+			if gothead {
+				break
+			}
+
+			continue
+		}
+
+		gothead = true
+
 		row := make([]int64, len(items))
 
 		for idx, item := range items {
-			num, err := strconv.ParseInt(item, 10, 64)
-			if err != nil {
-				return nil, err
+			switch item {
+			case ".":
+				row[idx] = 0
+			case "o":
+				fallthrough
+			case "*":
+				row[idx] = 1
+			default:
+				return nil, errors.New("cells must be . or o")
 			}
-
-			if num > 1 {
-				return nil, errors.New("cells must be 0 or 1")
-			}
-
-			row[idx] = num
 		}
 
+		repr.Println(row)
 		grid.Data = append(grid.Data, row)
 	}
 
@@ -192,13 +184,47 @@ func LoadState(filename string) (*Grid, error) {
 	grid.Width = explen
 	grid.Height = rows
 
+	grid.Dump()
 	return grid, nil
+}
+
+// save  the contents  of  the  whole grid  as  a  simple lif  alike
+// file. One line per row, 0 for dead and 1 for life cell.
+// file format: https://conwaylife.com/wiki/Life_1.05
+func (grid *Grid) SaveState(filename, rule string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to open state file: %w", err)
+	}
+	defer file.Close()
+
+	fmt.Fprintf(file, "#Life 1.05\n#R %s\n#D golsky state file\n#P -1 -1\n", rule)
+
+	for y := range grid.Data {
+		for _, cell := range grid.Data[y] {
+			row := ""
+			switch cell {
+			case 1:
+				row += "o"
+			case 0:
+				row += "."
+			}
+
+			_, err := file.WriteString(row)
+			if err != nil {
+				return fmt.Errorf("failed to write to state file: %w", err)
+			}
+		}
+		file.WriteString("\n")
+	}
+
+	return nil
 }
 
 // generate filenames for dumps
 func GetFilename(generations int64) string {
 	now := time.Now()
-	return fmt.Sprintf("dump-%s-%d.gol", now.Format("20060102150405"), generations)
+	return fmt.Sprintf("dump-%s-%d.lif", now.Format("20060102150405"), generations)
 }
 
 func GetFilenameRLE(generations int64) string {

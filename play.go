@@ -323,7 +323,7 @@ func (scene *ScenePlay) CheckMarkInput() {
 
 func (scene *ScenePlay) SaveState() {
 	filename := GetFilename(scene.Generations)
-	err := scene.Grids[scene.Index].SaveState(filename)
+	err := scene.Grids[scene.Index].SaveState(filename, scene.Config.Rule.Definition)
 	if err != nil {
 		log.Printf("failed to save game state to %s: %s", filename, err)
 	}
