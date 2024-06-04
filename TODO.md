@@ -1,8 +1,24 @@
 - add all other options like size etc
-
+- do not process history if turned off
+- add gif export
+- add toolbar
+- turn input ifs to switch
+- add insert mode for edit like vi
+- use left mouse to drag grid unless insert mode is active
+- keep supporting middle mouse to drag so that dragging is possible in insert mode
+- print current mode to the bottom like pause, insert and mark
+- add https://www.ibiblio.org/lifepatterns/october1970.html
+- use uint8 or bool, history needs not be larger than 256 anyway
+- history: dont count age but do calc to get index to age tile based on cell age
+- maybe pre calc neighbors as 8 slice of pointers to neighboring cells to faster do the count
+- https://mattnakama.com/blog/go-branchless-coding/
 - add performance measurements, see:
   DrawTriangles: https://github.com/TLINDEN/testgol
   WritePixels:   https://github.com/TLINDEN/testgol/tree/wrpixels
+https://www.tasnimzotder.com/blog/optimizing-game-of-life-algorithm
+
+- Speed
+  https://conwaylife.com/forums/viewtopic.php?f=7&t=3237
   
 - Patterns:
 
@@ -22,6 +38,8 @@ https://conwaylife.com/wiki/Apgcode
 
 Collections:
 
+https://conwaylife.com/wiki/Pattern_of_the_Year
+https://www.ibiblio.org/lifepatterns/
 https://entropymine.com/jason/life/
 https://github.com/Matthias-Merzenich/jslife-moving
 https://conwaylife.com/ref/mniemiec/lifepage.htm
