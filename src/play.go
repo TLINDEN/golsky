@@ -48,6 +48,8 @@ type ScenePlay struct {
 	Mark, Point                                image.Point   // area to marks+save
 	RunOneStep                                 bool          // mutable flags from config
 	TPG                                        int
+	Pixels                                     []byte
+	PixelColor                                 []byte
 }
 
 func NewPlayScene(game *Game, config *Config) Scene {
@@ -130,11 +132,13 @@ func (scene *ScenePlay) UpdateCells() {
 			// change state of current cell in next grid
 			scene.Grids[next].Data[y][x] = nextstate
 
-			// set history  to current generation so we  can infer the
-			// age of the cell's state  during rendering and use it to
-			// deduce the color to use if evolution tracing is enabled
-			if state != nextstate {
-				scene.History.Data[y][x] = scene.Generations
+			if scene.Config.ShowEvolution {
+				// set history  to current generation so we  can infer the
+				// age of the cell's state  during rendering and use it to
+				// deduce the color to use if evolution tracing is enabled
+				if state != nextstate {
+					scene.History.Data[y][x] = scene.Generations
+				}
 			}
 		}
 	}
@@ -152,6 +156,75 @@ func (scene *ScenePlay) UpdateCells() {
 
 	// reset speed counter
 	scene.TicksElapsed = 0
+}
+
+// 2: works but still too slow
+func (scene *ScenePlay) UpdatePixels() {
+	var col byte
+	width := scene.World.Bounds().Dx()
+	idx := 0
+
+	for y := 0; y < scene.Config.Height; y++ {
+		for x := 0; x < scene.Config.Width; x++ {
+			col = scene.PixelColor[scene.Grids[scene.Index].Data[y][x]]
+
+			ypx := y * scene.Config.Cellsize
+			for Y := ypx; Y < ypx+scene.Config.Cellsize; Y++ {
+				xpx := x * scene.Config.Cellsize
+				for X := xpx; X < xpx+scene.Config.Cellsize; X++ {
+					idx = 4 * (X + Y*width)
+
+					scene.Pixels[idx] = col
+					scene.Pixels[idx+1] = col
+					scene.Pixels[idx+2] = col
+					scene.Pixels[idx+3] = 0xff
+
+					idx++
+				}
+			}
+		}
+	}
+
+	scene.Cache.WritePixels(scene.Pixels)
+}
+
+// 1: works, but a little slower than 2
+func (scene *ScenePlay) _UpdatePixels() {
+	var col byte
+
+	gridx := 0
+	gridy := 0
+	idx := 0
+
+	width := scene.World.Bounds().Dx()
+	height := scene.World.Bounds().Dy()
+
+	for y := 0; y < height; y++ {
+		gridy = y / scene.Config.Cellsize // compute once per row
+
+		for x := 0; x < width; x++ {
+			gridx = x / scene.Config.Cellsize
+
+			col = scene.PixelColor[scene.Grids[scene.Index].Data[gridy][gridx]]
+
+			if scene.Config.ShowGrid {
+				if x%scene.Config.Cellsize == 0 || y%scene.Config.Cellsize == 0 {
+					col = scene.PixelColor[2]
+				}
+			}
+
+			idx = 4 * (x + y*width)
+
+			scene.Pixels[idx] = col
+			scene.Pixels[idx+1] = col
+			scene.Pixels[idx+2] = col
+			scene.Pixels[idx+3] = 0xff
+
+			idx++
+		}
+	}
+
+	scene.Cache.WritePixels(scene.Pixels)
 }
 
 func (scene *ScenePlay) Reset() {
@@ -433,47 +506,50 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	// a nice grey grid with grid lines
 	op := &ebiten.DrawImageOptions{}
 
+	scene.UpdatePixels()
+
 	op.GeoM.Translate(0, 0)
 	scene.World.DrawImage(scene.Cache, op)
 
-	var age int64
+	/*
+		var age int64
 
-	for y := 0; y < scene.Config.Height; y++ {
-		for x := 0; x < scene.Config.Width; x++ {
-			op.GeoM.Reset()
-			op.GeoM.Translate(
-				float64(x*scene.Config.Cellsize),
-				float64(y*scene.Config.Cellsize),
-			)
+		for y := 0; y < scene.Config.Height; y++ {
+			for x := 0; x < scene.Config.Width; x++ {
+				op.GeoM.Reset()
+				op.GeoM.Translate(
+					float64(x*scene.Config.Cellsize),
+					float64(y*scene.Config.Cellsize),
+				)
 
-			age = scene.Generations - scene.History.Data[y][x]
+				age = scene.Generations - scene.History.Data[y][x]
 
-			switch scene.Grids[scene.Index].Data[y][x] {
-			case Alive:
-				if age > 50 && scene.Config.ShowEvolution {
-					scene.World.DrawImage(scene.Tiles.Old, op)
+				switch scene.Grids[scene.Index].Data[y][x] {
+				case Alive:
+					if age > 50 && scene.Config.ShowEvolution {
+						scene.World.DrawImage(scene.Tiles.Old, op)
 
-				} else {
-					scene.World.DrawImage(scene.Tiles.Black, op)
-				}
-			case Dead:
-				// only draw dead cells in case evolution trace is enabled
-				if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
-					switch {
-					case age < 10:
-						scene.World.DrawImage(scene.Tiles.Age1, op)
-					case age < 20:
-						scene.World.DrawImage(scene.Tiles.Age2, op)
-					case age < 30:
-						scene.World.DrawImage(scene.Tiles.Age3, op)
-					default:
-						scene.World.DrawImage(scene.Tiles.Age4, op)
+					} else {
+						scene.World.DrawImage(scene.Tiles.Black, op)
+					}
+				case Dead:
+					// only draw dead cells in case evolution trace is enabled
+					if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
+						switch {
+						case age < 10:
+							scene.World.DrawImage(scene.Tiles.Age1, op)
+						case age < 20:
+							scene.World.DrawImage(scene.Tiles.Age2, op)
+						case age < 30:
+							scene.World.DrawImage(scene.Tiles.Age3, op)
+						default:
+							scene.World.DrawImage(scene.Tiles.Age4, op)
+						}
 					}
 				}
 			}
 		}
-	}
-
+	*/
 	scene.DrawMark(scene.World)
 
 	scene.Camera.Render(scene.World, screen)
@@ -649,6 +725,8 @@ func (scene *ScenePlay) Init() {
 		scene.Config.Height*scene.Config.Cellsize,
 	)
 
+	scene.Pixels = make([]byte, scene.World.Bounds().Dx()*scene.World.Bounds().Dy()*scene.Config.Cellsize)
+
 	scene.InitTiles()
 	scene.InitCache()
 
@@ -672,6 +750,11 @@ func (scene *ScenePlay) Init() {
 	}
 
 	scene.Camera.Setup()
+
+	scene.PixelColor = make([]byte, 3)
+	scene.PixelColor[0] = 0xff
+	scene.PixelColor[1] = 0x00
+	scene.PixelColor[2] = 0xff
 }
 
 // count the living neighbors of a cell
