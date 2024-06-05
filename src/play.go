@@ -30,10 +30,10 @@ type ScenePlay struct {
 
 	Clear bool
 
-	Grids                                      []*Grid // 2 grids: one current, one next
-	History                                    *Grid   // holds state of past dead cells for evolution traces
-	Index                                      int     // points to current grid
-	Generations                                int64   // Stats
+	Grids                                      []*Grid    // 2 grids: one current, one next
+	History                                    [][]uint64 // holds state of past dead cells for evolution traces
+	Index                                      int        // points to current grid
+	Generations                                uint64     // Stats
 	Black, White, Grey, Old                    color.RGBA
 	AgeColor1, AgeColor2, AgeColor3, AgeColor4 color.RGBA
 	TicksElapsed                               int           // tick counter for game speed
@@ -85,8 +85,8 @@ func (scene *ScenePlay) SetNext(next SceneName) {
 	scene.Next = next
 }
 
-func (scene *ScenePlay) CheckRule(state int64, neighbors int64) int64 {
-	var nextstate int64
+func (scene *ScenePlay) CheckRule(state uint8, neighbors uint8) uint8 {
+	var nextstate uint8
 
 	// The standard Scene of Life is symbolized in rule-string notation
 	// as B3/S23 (23/3 here).  A cell  is born if it has exactly three
@@ -133,8 +133,9 @@ func (scene *ScenePlay) UpdateCells() {
 			// set history  to current generation so we  can infer the
 			// age of the cell's state  during rendering and use it to
 			// deduce the color to use if evolution tracing is enabled
+			// FIXME: unbranch somehow
 			if state != nextstate {
-				scene.History.Data[y][x] = scene.Generations
+				scene.History[y][x] = scene.Generations
 			}
 		}
 	}
@@ -363,10 +364,10 @@ func (scene *ScenePlay) SaveRectRLE() {
 		height = scene.Mark.Y - scene.Point.Y
 	}
 
-	grid := make([][]int64, height)
+	grid := make([][]uint8, height)
 
 	for y := 0; y < height; y++ {
-		grid[y] = make([]int64, width)
+		grid[y] = make([]uint8, width)
 
 		for x := 0; x < width; x++ {
 			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx]
@@ -414,15 +415,15 @@ func (scene *ScenePlay) Update() error {
 }
 
 // set a cell to alive or dead
-func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
+func (scene *ScenePlay) ToggleCellOnCursorPos(state uint8) {
 	// use cursor pos relative to the world
 	worldX, worldY := scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	x := int(worldX) / scene.Config.Cellsize
 	y := int(worldY) / scene.Config.Cellsize
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
-		scene.Grids[scene.Index].Data[y][x] = alive
-		scene.History.Data[y][x] = 1
+		scene.Grids[scene.Index].Data[y][x] = state
+		scene.History[y][x] = 1
 	}
 }
 
@@ -436,7 +437,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(0, 0)
 	scene.World.DrawImage(scene.Cache, op)
 
-	var age int64
+	var age uint64
 
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
@@ -446,7 +447,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				float64(y*scene.Config.Cellsize),
 			)
 
-			age = scene.Generations - scene.History.Data[y][x]
+			age = scene.Generations - scene.History[y][x]
 
 			switch scene.Grids[scene.Index].Data[y][x] {
 			case Alive:
@@ -458,7 +459,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				}
 			case Dead:
 				// only draw dead cells in case evolution trace is enabled
-				if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
+				if scene.History[y][x] > 1 && scene.Config.ShowEvolution {
 					switch {
 					case age < 10:
 						scene.World.DrawImage(scene.Tiles.Age1, op)
@@ -539,7 +540,6 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 // load a pre-computed pattern from RLE file
 func (scene *ScenePlay) InitPattern() {
 	scene.Grids[0].LoadRLE(scene.Config.RLE)
-	scene.History.LoadRLE(scene.Config.RLE)
 }
 
 // pre-render offscreen cache image
@@ -580,7 +580,10 @@ func (scene *ScenePlay) InitGrid() {
 		gridb,
 	}
 
-	scene.History = history
+	scene.History = make([][]uint64, scene.Config.Height)
+	for y := 0; y < scene.Config.Height; y++ {
+		scene.History[y] = make([]uint64, scene.Config.Width)
+	}
 }
 
 // prepare tile images
@@ -675,8 +678,8 @@ func (scene *ScenePlay) Init() {
 }
 
 // count the living neighbors of a cell
-func (scene *ScenePlay) CountNeighbors(x, y int) int64 {
-	var sum int64
+func (scene *ScenePlay) CountNeighbors(x, y int) uint8 {
+	var sum uint8
 
 	for nbgX := -1; nbgX < 2; nbgX++ {
 		for nbgY := -1; nbgY < 2; nbgY++ {

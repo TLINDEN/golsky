@@ -13,7 +13,7 @@ import (
 )
 
 type Grid struct {
-	Data                   [][]int64
+	Data                   [][]uint8
 	Width, Height, Density int
 	Empty                  bool
 }
@@ -24,12 +24,12 @@ func NewGrid(width, height, density int, empty bool) *Grid {
 		Height:  height,
 		Width:   width,
 		Density: density,
-		Data:    make([][]int64, height),
+		Data:    make([][]uint8, height),
 		Empty:   empty,
 	}
 
 	for y := 0; y < height; y++ {
-		grid.Data[y] = make([]int64, width)
+		grid.Data[y] = make([]uint8, width)
 	}
 
 	return grid
@@ -233,12 +233,12 @@ func (grid *Grid) SaveState(filename, rule string) error {
 }
 
 // generate filenames for dumps
-func GetFilename(generations int64) string {
+func GetFilename(generations uint64) string {
 	now := time.Now()
 	return fmt.Sprintf("dump-%s-%d.lif", now.Format("20060102150405"), generations)
 }
 
-func GetFilenameRLE(generations int64) string {
+func GetFilenameRLE(generations uint64) string {
 	now := time.Now()
 	return fmt.Sprintf("rect-%s-%d.rle", now.Format("20060102150405"), generations)
 }

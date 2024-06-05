@@ -238,20 +238,14 @@ func (game *Game) Draw(screen *ebiten.Image) {
 }
 
 func main() {
-	//x := 1
-	//y := 0
-	col := 1 >> 0xff
+	// state := 1
+	// nextstate := 0
+	v := 0
 
-	fmt.Printf("col: %d\n", col)
-
-	x := 1
-	y := 2
-	c := 4
-
-	xm := x & (c - 1)
-	ym := y & (c - 1)
-
-	fmt.Println(xm & ym)
+	for i := 0; i < 600; i++ {
+		v = ((v + 1) & 255)
+		fmt.Println(i, i&255)
+	}
 }
 
 func _main() {
