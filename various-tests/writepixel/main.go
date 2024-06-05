@@ -252,6 +252,17 @@ func main() {
 	ym := y & (c - 1)
 
 	fmt.Println(xm & ym)
+
+	a := 1
+	b := 1
+	//gen := 100
+	hist := 0
+	for gen := 0; gen < 50; gen++ {
+		fmt.Println((a ^ (1 ^ b)) * (gen - hist))
+		if gen == 25 {
+			a = 0
+		}
+	}
 }
 
 func _main() {

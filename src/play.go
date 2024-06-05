@@ -133,9 +133,13 @@ func (scene *ScenePlay) UpdateCells() {
 			// set history  to current generation so we  can infer the
 			// age of the cell's state  during rendering and use it to
 			// deduce the color to use if evolution tracing is enabled
+			// 60FPS:
 			if state != nextstate {
 				scene.History.Data[y][x] = scene.Generations
 			}
+
+			// 10FPS:
+			//scene.History.Data[y][x] = (state ^ (1 ^ nextstate)) * (scene.Generations - scene.History.Data[y][x])
 		}
 	}
 
@@ -446,7 +450,8 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				float64(y*scene.Config.Cellsize),
 			)
 
-			age = scene.Generations - scene.History.Data[y][x]
+			//age = scene.Generations - scene.History.Data[y][x]
+			age = scene.History.Data[y][x]
 
 			switch scene.Grids[scene.Index].Data[y][x] {
 			case Alive:
