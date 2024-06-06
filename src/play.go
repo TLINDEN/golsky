@@ -43,7 +43,7 @@ type ScenePlay struct {
 	World, Cache                               *ebiten.Image // actual image we render to
 	WheelTurned                                bool          // when user turns wheel multiple times, zoom faster
 	Dragging                                   bool          // middle mouse is pressed, move canvas
-	LastCursorPos                              []int         // used to check if the user is dragging
+	LastCursorPos                              []float64     // used to check if the user is dragging
 	MarkTaken                                  bool          // true when mouse1 pressed
 	MarkDone                                   bool          // true when mouse1 released, copy cells between Mark+Point
 	Mark, Point                                image.Point   // area to marks+save
@@ -266,11 +266,11 @@ func (scene *ScenePlay) CheckDraggingInput() {
 	if !scene.Dragging && ebiten.IsMouseButtonPressed(dragbutton) {
 		// start dragging
 		scene.Dragging = true
-		scene.LastCursorPos[0], scene.LastCursorPos[1] = ebiten.CursorPosition()
+		scene.LastCursorPos[0], scene.LastCursorPos[1] = scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	}
 
 	if scene.Dragging {
-		x, y := ebiten.CursorPosition()
+		x, y := scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 
 		if x != scene.LastCursorPos[0] || y != scene.LastCursorPos[1] {
 			// actually drag by mouse cursor pos diff to last cursor pos
@@ -278,7 +278,7 @@ func (scene *ScenePlay) CheckDraggingInput() {
 			scene.Camera.Position[1] -= float64(y - scene.LastCursorPos[1])
 		}
 
-		scene.LastCursorPos[0], scene.LastCursorPos[1] = ebiten.CursorPosition()
+		scene.LastCursorPos[0], scene.LastCursorPos[1] = scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	}
 
 	// also support the arrow keys to move the canvas
@@ -693,7 +693,7 @@ func (scene *ScenePlay) Init() {
 	scene.Index = 0
 	scene.TicksElapsed = 0
 
-	scene.LastCursorPos = make([]int, 2)
+	scene.LastCursorPos = make([]float64, 2)
 
 	if scene.Config.Zoomfactor < 0 || scene.Config.Zoomfactor > 0 {
 		scene.Camera.ZoomFactor = scene.Config.Zoomfactor
