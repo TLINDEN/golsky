@@ -131,16 +131,18 @@ func (scene *ScenePlay) UpdateCells() {
 			// change state of current cell in next grid
 			scene.Grids[next].Data[y][x] = nextstate
 
-			// set history  to current generation so we  can infer the
-			// age of the cell's state  during rendering and use it to
-			// deduce the color to use if evolution tracing is enabled
-			// 60FPS:
-			if state != nextstate {
-				scene.History[y][x] = scene.Generations
-			}
+			if scene.Config.ShowEvolution {
+				// set history  to current generation so we  can infer the
+				// age of the cell's state  during rendering and use it to
+				// deduce the color to use if evolution tracing is enabled
+				// 60FPS:
+				if state != nextstate {
+					scene.History[y][x] = scene.Generations
+				}
 
-			// 10FPS:
-			//scene.History.Data[y][x] = (state ^ (1 ^ nextstate)) * (scene.Generations - scene.History.Data[y][x])
+				// 10FPS:
+				//scene.History.Data[y][x] = (state ^ (1 ^ nextstate)) * (scene.Generations - scene.History.Data[y][x])
+			}
 		}
 	}
 
@@ -459,8 +461,6 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(0, 0)
 	scene.World.DrawImage(scene.Cache, op)
 
-	var age int64
-
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
 			op.GeoM.Reset()
@@ -469,30 +469,11 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				float64(y*scene.Config.Cellsize),
 			)
 
-			//age = scene.Generations - scene.History.Data[y][x]
-			age = scene.History[y][x]
-
-			switch scene.Grids[scene.Index].Data[y][x] {
-			case Alive:
-				if age > 50 && scene.Config.ShowEvolution {
-					scene.World.DrawImage(scene.Tiles.Old, op)
-
-				} else {
+			if scene.Config.ShowEvolution {
+				scene.DrawEvolution(screen, x, y, op)
+			} else {
+				if scene.Grids[scene.Index].Data[y][x] {
 					scene.World.DrawImage(scene.Tiles.Black, op)
-				}
-			case Dead:
-				// only draw dead cells in case evolution trace is enabled
-				if scene.History[y][x] > 1 && scene.Config.ShowEvolution {
-					switch {
-					case age < 10:
-						scene.World.DrawImage(scene.Tiles.Age1, op)
-					case age < 20:
-						scene.World.DrawImage(scene.Tiles.Age2, op)
-					case age < 30:
-						scene.World.DrawImage(scene.Tiles.Age3, op)
-					default:
-						scene.World.DrawImage(scene.Tiles.Age4, op)
-					}
 				}
 			}
 		}
@@ -508,6 +489,33 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(0, 0)
 
 	scene.Game.Screen.DrawImage(screen, op)
+}
+
+func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
+	age := scene.Generations - scene.History[y][x]
+
+	switch scene.Grids[scene.Index].Data[y][x] {
+	case Alive:
+		if age > 50 && scene.Config.ShowEvolution {
+			scene.World.DrawImage(scene.Tiles.Old, op)
+		} else {
+			scene.World.DrawImage(scene.Tiles.Black, op)
+		}
+	case Dead:
+		// only draw dead cells in case evolution trace is enabled
+		if scene.History[y][x] > 1 && scene.Config.ShowEvolution {
+			switch {
+			case age < 10:
+				scene.World.DrawImage(scene.Tiles.Age1, op)
+			case age < 20:
+				scene.World.DrawImage(scene.Tiles.Age2, op)
+			case age < 30:
+				scene.World.DrawImage(scene.Tiles.Age3, op)
+			default:
+				scene.World.DrawImage(scene.Tiles.Age4, op)
+			}
+		}
+	}
 }
 
 func (scene *ScenePlay) DrawMark(screen *ebiten.Image) {

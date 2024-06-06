@@ -1,14 +1,10 @@
 - add all other options like size etc
-- do not process history if turned off
 - add gif export
 - add toolbar
 - turn input ifs to switch
-- add insert mode for edit like vi
-- use left mouse to drag grid unless insert mode is active
-- keep supporting middle mouse to drag so that dragging is possible in insert mode
+- only draw visible part of the world
 - print current mode to the bottom like pause, insert and mark
 - add https://www.ibiblio.org/lifepatterns/october1970.html
-- use uint8 or bool, history needs not be larger than 256 anyway
 - history: dont count age but do calc to get index to age tile based on cell age
 - maybe pre calc neighbors as 8 slice of pointers to neighboring cells to faster do the count
 - https://mattnakama.com/blog/go-branchless-coding/
