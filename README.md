@@ -76,7 +76,10 @@ While it runs, there are a couple of commands you can use:
 * page up: speed up
 * page down: slow down
 * Mouse wheel: zoom in or out
-* move mouse while middle mouse button pressed: move canvas
+* move mouse while left mouse button pressed: move canvas
+* i: enter "insert" (draw) mode: use left mouse to set cells alife and right
+  button to dead. Leave with "space". While in insert mode, use middle mouse
+  button to drag grid.
 * r: reset to 1:1 zoom
 * escape: open menu
 * s: save game state to file (can be loaded with -l)

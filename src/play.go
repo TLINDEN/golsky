@@ -48,7 +48,7 @@ type ScenePlay struct {
 	MarkDone                                   bool          // true when mouse1 released, copy cells between Mark+Point
 	Mark, Point                                image.Point   // area to marks+save
 	RunOneStep                                 bool          // mutable flags from config
-	TPG                                        int
+	TPG                                        int           // current game speed (ticks per game)
 }
 
 func NewPlayScene(game *Game, config *Config) Scene {
@@ -188,22 +188,17 @@ func (scene *ScenePlay) CheckInput() {
 		scene.Config.Paused = true
 	}
 
+	if inpututil.IsKeyJustPressed(ebiten.KeyI) {
+		scene.Config.Drawmode = true
+		scene.Config.Paused = true
+	}
+
 	if scene.Config.Markmode {
 		return
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		scene.Config.TogglePaused()
-	}
-
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		scene.ToggleCellOnCursorPos(Alive)
-		scene.Config.Paused = true // drawing while running makes no sense
-	}
-
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
-		scene.ToggleCellOnCursorPos(Dead)
-		scene.Config.Paused = true // drawing while running makes no sense
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
@@ -233,6 +228,22 @@ func (scene *ScenePlay) CheckInput() {
 	}
 }
 
+func (scene *ScenePlay) CheckDrawingInput() {
+	if scene.Config.Drawmode {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			scene.ToggleCellOnCursorPos(Alive)
+		}
+
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+			scene.ToggleCellOnCursorPos(Dead)
+		}
+
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			scene.Config.Drawmode = false
+		}
+	}
+}
+
 // Check dragging input.  move the canvas with the  mouse while pressing
 // the middle mouse button, zoom in and out using the wheel.
 func (scene *ScenePlay) CheckDraggingInput() {
@@ -240,13 +251,19 @@ func (scene *ScenePlay) CheckDraggingInput() {
 		return
 	}
 
+	dragbutton := ebiten.MouseButtonLeft
+
+	if scene.Config.Drawmode {
+		dragbutton = ebiten.MouseButtonMiddle
+	}
+
 	// move canvas
-	if scene.Dragging && !ebiten.IsMouseButtonPressed(ebiten.MouseButton1) {
+	if scene.Dragging && !ebiten.IsMouseButtonPressed(dragbutton) {
 		// release
 		scene.Dragging = false
 	}
 
-	if !scene.Dragging && ebiten.IsMouseButtonPressed(ebiten.MouseButton1) {
+	if !scene.Dragging && ebiten.IsMouseButtonPressed(dragbutton) {
 		// start dragging
 		scene.Dragging = true
 		scene.LastCursorPos[0], scene.LastCursorPos[1] = ebiten.CursorPosition()
@@ -408,6 +425,7 @@ func (scene *ScenePlay) Update() error {
 	}
 
 	scene.CheckInput()
+	scene.CheckDrawingInput()
 	scene.CheckDraggingInput()
 	scene.CheckMarkInput()
 
@@ -517,6 +535,10 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 
 		if scene.Config.Markmode {
 			paused = "-- mark --"
+		}
+
+		if scene.Config.Drawmode {
+			paused = "-- insert --"
 		}
 
 		x, y := ebiten.CursorPosition()
