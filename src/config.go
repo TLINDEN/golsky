@@ -52,6 +52,25 @@ const (
 	DEFAULT_GEOM        = "640x384"
 )
 
+const KEYBINDINGS string = `
+- SPACE: pause or resume the game
+- N: while game is paused: forward one step
+- PAGE UP: speed up
+- PAGE DOWN: slow down
+- MOUSE WHEEL: zoom in or out
+- LEFT MOUSE BUTTON: use to drag canvas, keep clicked and move mouse
+- I: enter "insert" (draw) mode: use left mouse to set cells alife and right
+     button to dead. Leave with "space". While in insert mode, use middle mouse
+     button to drag grid.
+- R: reset to 1:1 zoom
+- ESCAPE: open menu, o: open options menu
+- S: save game state to file (can be loaded with -l)
+- C: enter mark mode. Mark a rectangle with the mouse, when you
+     release the mouse buttonx it is being saved to an RLE file
+- D: toggle debug output 
+- Q: quit game
+`
+
 func (config *Config) SetupCamera() {
 	config.Zoomfactor = DEFAULT_ZOOMFACTOR
 

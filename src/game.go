@@ -26,6 +26,7 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	game.Scenes[Play] = NewPlayScene(game, config)
 	game.Scenes[Menu] = NewMenuScene(game, config)
 	game.Scenes[Options] = NewOptionsScene(game, config)
+	game.Scenes[Keybindings] = NewKeybindingsScene(game, config)
 
 	// setup environment
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)

@@ -104,6 +104,11 @@ func (scene *SceneMenu) Init() {
 			scene.SetNext(Options)
 		})
 
+	bindings := NewMenuButton("Show Key Bindings",
+		func(args *widget.ButtonClickedEventArgs) {
+			scene.SetNext(Keybindings)
+		})
+
 	separator1 := NewSeparator(3)
 	separator2 := NewSeparator(3)
 	separator3 := NewSeparator(10)
@@ -123,6 +128,7 @@ func (scene *SceneMenu) Init() {
 	rowContainer.AddChild(separator1)
 	rowContainer.AddChild(options)
 	rowContainer.AddChild(copy)
+	rowContainer.AddChild(bindings)
 	rowContainer.AddChild(separator2)
 	rowContainer.AddChild(cancel)
 	rowContainer.AddChild(separator3)
