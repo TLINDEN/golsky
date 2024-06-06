@@ -13,7 +13,7 @@ import (
 )
 
 type Grid struct {
-	Data                   [][]int64
+	Data                   [][]bool
 	Width, Height, Density int
 	Empty                  bool
 }
@@ -24,12 +24,12 @@ func NewGrid(width, height, density int, empty bool) *Grid {
 		Height:  height,
 		Width:   width,
 		Density: density,
-		Data:    make([][]int64, height),
+		Data:    make([][]bool, height),
 		Empty:   empty,
 	}
 
 	for y := 0; y < height; y++ {
-		grid.Data[y] = make([]int64, width)
+		grid.Data[y] = make([]bool, width)
 	}
 
 	return grid
@@ -59,7 +59,7 @@ func (grid *Grid) Copy(other *Grid) {
 func (grid *Grid) Clear() {
 	for y := range grid.Data {
 		for x := range grid.Data[y] {
-			grid.Data[y][x] = 0
+			grid.Data[y][x] = false
 		}
 	}
 }
@@ -70,7 +70,7 @@ func (grid *Grid) FillRandom() {
 		for y := range grid.Data {
 			for x := range grid.Data[y] {
 				if rand.Intn(grid.Density) == 1 {
-					grid.Data[y][x] = 1
+					grid.Data[y][x] = true
 				}
 			}
 		}
@@ -80,7 +80,7 @@ func (grid *Grid) FillRandom() {
 func (grid *Grid) Dump() {
 	for y := 0; y < grid.Height; y++ {
 		for x := 0; x < grid.Width; x++ {
-			if grid.Data[y][x] == 1 {
+			if grid.Data[y][x] {
 				fmt.Print("XX")
 			} else {
 				fmt.Print("  ")
@@ -103,7 +103,7 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 					x = colIndex + startX
 					y = rowIndex + startY
 
-					grid.Data[y][x] = 1
+					grid.Data[y][x] = true
 				}
 			}
 		}
@@ -213,12 +213,9 @@ func (grid *Grid) SaveState(filename, rule string) error {
 
 	for y := range grid.Data {
 		for _, cell := range grid.Data[y] {
-			row := ""
-			switch cell {
-			case 1:
-				row += "o"
-			case 0:
-				row += "."
+			row := "."
+			if cell {
+				row = "o"
 			}
 
 			_, err := file.WriteString(row)

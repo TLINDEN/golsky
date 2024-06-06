@@ -42,8 +42,8 @@ type Config struct {
 
 const (
 	VERSION = "v0.0.8"
-	Alive   = 1
-	Dead    = 0
+	Alive   = true
+	Dead    = false
 
 	DEFAULT_GRID_WIDTH  = 600
 	DEFAULT_GRID_HEIGHT = 400

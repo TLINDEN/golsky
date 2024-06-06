@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -30,10 +31,10 @@ type ScenePlay struct {
 
 	Clear bool
 
-	Grids                                      []*Grid // 2 grids: one current, one next
-	History                                    *Grid   // holds state of past dead cells for evolution traces
-	Index                                      int     // points to current grid
-	Generations                                int64   // Stats
+	Grids                                      []*Grid   // 2 grids: one current, one next
+	History                                    [][]int64 // holds state of past dead cells for evolution traces
+	Index                                      int       // points to current grid
+	Generations                                int64     // Stats
 	Black, White, Grey, Old                    color.RGBA
 	AgeColor1, AgeColor2, AgeColor3, AgeColor4 color.RGBA
 	TicksElapsed                               int           // tick counter for game speed
@@ -85,8 +86,8 @@ func (scene *ScenePlay) SetNext(next SceneName) {
 	scene.Next = next
 }
 
-func (scene *ScenePlay) CheckRule(state int64, neighbors int64) int64 {
-	var nextstate int64
+func (scene *ScenePlay) CheckRule(state bool, neighbors int) bool {
+	var nextstate bool
 
 	// The standard Scene of Life is symbolized in rule-string notation
 	// as B3/S23 (23/3 here).  A cell  is born if it has exactly three
@@ -94,9 +95,9 @@ func (scene *ScenePlay) CheckRule(state int64, neighbors int64) int64 {
 	// and  dies otherwise. The first  number, or list of  numbers, is
 	// what is required for a dead cell to be born.
 
-	if state == 0 && Contains(scene.Config.Rule.Birth, neighbors) {
+	if !state && Contains(scene.Config.Rule.Birth, neighbors) {
 		nextstate = Alive
-	} else if state == 1 && Contains(scene.Config.Rule.Death, neighbors) {
+	} else if state && Contains(scene.Config.Rule.Death, neighbors) {
 		nextstate = Alive
 	} else {
 		nextstate = Dead
@@ -135,7 +136,7 @@ func (scene *ScenePlay) UpdateCells() {
 			// deduce the color to use if evolution tracing is enabled
 			// 60FPS:
 			if state != nextstate {
-				scene.History.Data[y][x] = scene.Generations
+				scene.History[y][x] = scene.Generations
 			}
 
 			// 10FPS:
@@ -367,10 +368,10 @@ func (scene *ScenePlay) SaveRectRLE() {
 		height = scene.Mark.Y - scene.Point.Y
 	}
 
-	grid := make([][]int64, height)
+	grid := make([][]bool, height)
 
 	for y := 0; y < height; y++ {
-		grid[y] = make([]int64, width)
+		grid[y] = make([]bool, width)
 
 		for x := 0; x < width; x++ {
 			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx]
@@ -418,7 +419,7 @@ func (scene *ScenePlay) Update() error {
 }
 
 // set a cell to alive or dead
-func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
+func (scene *ScenePlay) ToggleCellOnCursorPos(alive bool) {
 	// use cursor pos relative to the world
 	worldX, worldY := scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	x := int(worldX) / scene.Config.Cellsize
@@ -426,7 +427,7 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive int64) {
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
 		scene.Grids[scene.Index].Data[y][x] = alive
-		scene.History.Data[y][x] = 1
+		scene.History[y][x] = 1
 	}
 }
 
@@ -451,7 +452,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			)
 
 			//age = scene.Generations - scene.History.Data[y][x]
-			age = scene.History.Data[y][x]
+			age = scene.History[y][x]
 
 			switch scene.Grids[scene.Index].Data[y][x] {
 			case Alive:
@@ -463,7 +464,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				}
 			case Dead:
 				// only draw dead cells in case evolution trace is enabled
-				if scene.History.Data[y][x] > 1 && scene.Config.ShowEvolution {
+				if scene.History[y][x] > 1 && scene.Config.ShowEvolution {
 					switch {
 					case age < 10:
 						scene.World.DrawImage(scene.Tiles.Age1, op)
@@ -544,7 +545,6 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 // load a pre-computed pattern from RLE file
 func (scene *ScenePlay) InitPattern() {
 	scene.Grids[0].LoadRLE(scene.Config.RLE)
-	scene.History.LoadRLE(scene.Config.RLE)
 }
 
 // pre-render offscreen cache image
@@ -574,18 +574,19 @@ func (scene *ScenePlay) InitCache() {
 func (scene *ScenePlay) InitGrid() {
 	grida := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 	gridb := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
-	history := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
 
 	// startup is delayed until user has selected options
 	grida.FillRandom()
-	grida.Copy(history)
 
 	scene.Grids = []*Grid{
 		grida,
 		gridb,
 	}
 
-	scene.History = history
+	scene.History = make([][]int64, scene.Config.Height)
+	for y := 0; y < scene.Config.Height; y++ {
+		scene.History[y] = make([]int64, scene.Config.Width)
+	}
 }
 
 // prepare tile images
@@ -679,9 +680,15 @@ func (scene *ScenePlay) Init() {
 	scene.Camera.Setup()
 }
 
+func bool2int(b bool) int {
+	return int(*(*byte)(unsafe.Pointer(&b)))
+}
+
 // count the living neighbors of a cell
-func (scene *ScenePlay) CountNeighbors(x, y int) int64 {
-	var sum int64
+func (scene *ScenePlay) CountNeighbors(x, y int) int {
+	var sum int
+
+	grid := scene.Grids[scene.Index].Data
 
 	for nbgX := -1; nbgX < 2; nbgX++ {
 		for nbgY := -1; nbgY < 2; nbgY++ {
@@ -703,12 +710,12 @@ func (scene *ScenePlay) CountNeighbors(x, y int) int64 {
 				row = y + nbgY
 			}
 
-			sum += scene.Grids[scene.Index].Data[row][col]
+			sum += bool2int(grid[row][col])
 		}
 	}
 
 	// don't count ourselfes though
-	sum -= scene.Grids[scene.Index].Data[y][x]
+	sum -= bool2int(grid[y][x])
 
 	return sum
 }
