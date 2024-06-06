@@ -3,6 +3,7 @@
 - add toolbar
 - turn input ifs to switch
 - only draw visible part of the world
+- use themes instead of the current weird color lists
 - print current mode to the bottom like pause, insert and mark
 - add https://www.ibiblio.org/lifepatterns/october1970.html
 - history: dont count age but do calc to get index to age tile based on cell age
