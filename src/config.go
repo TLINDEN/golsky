@@ -33,6 +33,8 @@ type Config struct {
 	ZoomOutFactor                                    int
 	InitialCamPos                                    []float64
 	DelayedStart                                     bool // if true game, we wait. like pause but program induced
+	Theme                                            string
+	ThemeManager                                     ThemeManager
 
 	// for internal profiling
 	ProfileFile     string
@@ -50,6 +52,7 @@ const (
 	DEFAULT_CELLSIZE    = 4
 	DEFAULT_ZOOMFACTOR  = 150
 	DEFAULT_GEOM        = "640x384"
+	DEFAULT_THEME       = "light" // inverse => "dark"
 )
 
 const KEYBINDINGS string = `
@@ -224,7 +227,11 @@ func ParseCommandline() (*Config, error) {
 	pflag.BoolVarP(&config.Debug, "debug", "d", false, "show debug info")
 	pflag.BoolVarP(&config.ShowGrid, "show-grid", "g", false, "draw grid lines")
 	pflag.BoolVarP(&config.Empty, "empty", "e", false, "start with an empty screen")
+
+	// style
 	pflag.BoolVarP(&config.Invert, "invert", "i", false, "invert colors (dead cell: black)")
+	pflag.StringVarP(&config.Theme, "theme", "T", "light", "color theme: dark, light (default: light)")
+
 	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
 	pflag.BoolVarP(&config.Wrap, "wrap-around", "w", false, "wrap around grid mode")
 	pflag.BoolVarP(&config.UseShader, "use-shader", "k", false, "use shader for cell rendering")
@@ -253,6 +260,12 @@ func ParseCommandline() (*Config, error) {
 
 	config.SetupCamera()
 
+	if config.Theme == "light" && config.Invert {
+		config.Theme = "dark"
+	}
+
+	config.ThemeManager = NewThemeManager(config.Theme, config.Cellsize)
+
 	//repr.Println(config)
 	return &config, nil
 }
@@ -267,7 +280,21 @@ func (config *Config) ToggleDebugging() {
 
 func (config *Config) ToggleInvert() {
 	config.Invert = !config.Invert
+
+	switch config.ThemeManager.GetCurrentThemeName() {
+	case "dark":
+		config.ThemeManager.SetCurrentTheme("light")
+	case "light":
+		config.ThemeManager.SetCurrentTheme("dark")
+	default:
+		fmt.Println("unable to invert custom theme, only possible with dark and light themes.")
+	}
+
 	config.RestartCache = true
+}
+
+func (config *Config) SwitchTheme(theme string) {
+	config.ThemeManager.SetCurrentTheme(theme)
 }
 
 func (config *Config) ToggleGridlines() {

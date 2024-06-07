@@ -31,24 +31,22 @@ type ScenePlay struct {
 
 	Clear bool
 
-	Grids                                      []*Grid   // 2 grids: one current, one next
-	History                                    [][]int64 // holds state of past dead cells for evolution traces
-	Index                                      int       // points to current grid
-	Generations                                int64     // Stats
-	Black, White, Grey, Old                    color.RGBA
-	AgeColor1, AgeColor2, AgeColor3, AgeColor4 color.RGBA
-	TicksElapsed                               int           // tick counter for game speed
-	Tiles                                      Images        // pre-computed tiles for dead and alife cells
-	Camera                                     Camera        // for zoom+move
-	World, Cache                               *ebiten.Image // actual image we render to
-	WheelTurned                                bool          // when user turns wheel multiple times, zoom faster
-	Dragging                                   bool          // middle mouse is pressed, move canvas
-	LastCursorPos                              []float64     // used to check if the user is dragging
-	MarkTaken                                  bool          // true when mouse1 pressed
-	MarkDone                                   bool          // true when mouse1 released, copy cells between Mark+Point
-	Mark, Point                                image.Point   // area to marks+save
-	RunOneStep                                 bool          // mutable flags from config
-	TPG                                        int           // current game speed (ticks per game)
+	Grids         []*Grid       // 2 grids: one current, one next
+	History       [][]int64     // holds state of past dead cells for evolution traces
+	Index         int           // points to current grid
+	Generations   int64         // Stats
+	TicksElapsed  int           // tick counter for game speed
+	Camera        Camera        // for zoom+move
+	World, Cache  *ebiten.Image // actual image we render to
+	WheelTurned   bool          // when user turns wheel multiple times, zoom faster
+	Dragging      bool          // middle mouse is pressed, move canvas
+	LastCursorPos []float64     // used to check if the user is dragging
+	MarkTaken     bool          // true when mouse1 pressed
+	MarkDone      bool          // true when mouse1 released, copy cells between Mark+Point
+	Mark, Point   image.Point   // area to marks+save
+	RunOneStep    bool          // mutable flags from config
+	TPG           int           // current game speed (ticks per game)
+	Theme         Theme
 }
 
 func NewPlayScene(game *Game, config *Config) Scene {
@@ -417,7 +415,7 @@ func (scene *ScenePlay) Update() error {
 
 	if scene.Config.RestartCache {
 		scene.Config.RestartCache = false
-		scene.InitTiles()
+		scene.Theme = scene.Config.ThemeManager.GetCurrentTheme()
 		scene.InitCache()
 		return nil
 	}
@@ -473,7 +471,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 				scene.DrawEvolution(screen, x, y, op)
 			} else {
 				if scene.Grids[scene.Index].Data[y][x] {
-					scene.World.DrawImage(scene.Tiles.Black, op)
+					scene.World.DrawImage(scene.Theme.Tile(ColLife), op)
 				}
 			}
 		}
@@ -497,22 +495,22 @@ func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten
 	switch scene.Grids[scene.Index].Data[y][x] {
 	case Alive:
 		if age > 50 && scene.Config.ShowEvolution {
-			scene.World.DrawImage(scene.Tiles.Old, op)
+			scene.World.DrawImage(scene.Theme.Tile(ColOld), op)
 		} else {
-			scene.World.DrawImage(scene.Tiles.Black, op)
+			scene.World.DrawImage(scene.Theme.Tile(ColLife), op)
 		}
 	case Dead:
 		// only draw dead cells in case evolution trace is enabled
 		if scene.History[y][x] > 1 && scene.Config.ShowEvolution {
 			switch {
 			case age < 10:
-				scene.World.DrawImage(scene.Tiles.Age1, op)
+				scene.World.DrawImage(scene.Theme.Tile(ColAge1), op)
 			case age < 20:
-				scene.World.DrawImage(scene.Tiles.Age2, op)
+				scene.World.DrawImage(scene.Theme.Tile(ColAge2), op)
 			case age < 30:
-				scene.World.DrawImage(scene.Tiles.Age3, op)
+				scene.World.DrawImage(scene.Theme.Tile(ColAge3), op)
 			default:
-				scene.World.DrawImage(scene.Tiles.Age4, op)
+				scene.World.DrawImage(scene.Theme.Tile(ColAge4), op)
 			}
 		}
 	}
@@ -529,7 +527,7 @@ func (scene *ScenePlay) DrawMark(screen *ebiten.Image) {
 			scene.World,
 			x+1, y+1,
 			w, h,
-			1.0, scene.Old, false,
+			1.0, scene.Theme.Color(ColOld), false,
 		)
 	}
 }
@@ -561,10 +559,10 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
 		FontRenderer.Renderer.SetTarget(screen)
 
-		FontRenderer.Renderer.SetColor(scene.Black)
+		FontRenderer.Renderer.SetColor(scene.Theme.Color(ColLife))
 		FontRenderer.Renderer.Draw(debug, 31, 31)
 
-		FontRenderer.Renderer.SetColor(scene.Old)
+		FontRenderer.Renderer.SetColor(scene.Theme.Color(ColOld))
 		FontRenderer.Renderer.Draw(debug, 30, 30)
 
 		fmt.Println(debug)
@@ -582,9 +580,9 @@ func (scene *ScenePlay) InitCache() {
 	op := &ebiten.DrawImageOptions{}
 
 	if scene.Config.ShowGrid {
-		scene.Cache.Fill(scene.Grey)
+		scene.Cache.Fill(scene.Theme.Color(ColGrid))
 	} else {
-		scene.Cache.Fill(scene.White)
+		scene.Cache.Fill(scene.Theme.Color(ColDead))
 	}
 
 	for y := 0; y < scene.Config.Height; y++ {
@@ -595,7 +593,7 @@ func (scene *ScenePlay) InitCache() {
 				float64(y*scene.Config.Cellsize),
 			)
 
-			scene.Cache.DrawImage(scene.Tiles.White, op)
+			scene.Cache.DrawImage(scene.Theme.Tile(ColDead), op)
 		}
 	}
 }
@@ -617,47 +615,6 @@ func (scene *ScenePlay) InitGrid() {
 	for y := 0; y < scene.Config.Height; y++ {
 		scene.History[y] = make([]int64, scene.Config.Width)
 	}
-}
-
-// prepare tile images
-func (scene *ScenePlay) InitTiles() {
-	scene.Grey = color.RGBA{128, 128, 128, 0xff}
-	scene.Old = color.RGBA{255, 30, 30, 0xff}
-
-	scene.Black = color.RGBA{0, 0, 0, 0xff}
-	scene.White = color.RGBA{200, 200, 200, 0xff}
-	scene.AgeColor1 = color.RGBA{255, 195, 97, 0xff} // FIXME: use slice!
-	scene.AgeColor2 = color.RGBA{255, 211, 140, 0xff}
-	scene.AgeColor3 = color.RGBA{255, 227, 181, 0xff}
-	scene.AgeColor4 = color.RGBA{255, 240, 224, 0xff}
-
-	if scene.Config.Invert {
-		scene.White = color.RGBA{0, 0, 0, 0xff}
-		scene.Black = color.RGBA{200, 200, 200, 0xff}
-
-		scene.AgeColor1 = color.RGBA{82, 38, 0, 0xff}
-		scene.AgeColor2 = color.RGBA{66, 35, 0, 0xff}
-		scene.AgeColor3 = color.RGBA{43, 27, 0, 0xff}
-		scene.AgeColor4 = color.RGBA{25, 17, 0, 0xff}
-	}
-
-	scene.Tiles.Black = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-	scene.Tiles.White = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-	scene.Tiles.Old = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-	scene.Tiles.Age1 = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-	scene.Tiles.Age2 = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-	scene.Tiles.Age3 = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-	scene.Tiles.Age4 = ebiten.NewImage(scene.Config.Cellsize, scene.Config.Cellsize)
-
-	cellsize := scene.Config.ScreenWidth / scene.Config.Cellsize
-
-	FillCell(scene.Tiles.Black, cellsize, scene.Black)
-	FillCell(scene.Tiles.White, cellsize, scene.White)
-	FillCell(scene.Tiles.Old, cellsize, scene.Old)
-	FillCell(scene.Tiles.Age1, cellsize, scene.AgeColor1)
-	FillCell(scene.Tiles.Age2, cellsize, scene.AgeColor2)
-	FillCell(scene.Tiles.Age3, cellsize, scene.AgeColor3)
-	FillCell(scene.Tiles.Age4, cellsize, scene.AgeColor4)
 }
 
 func (scene *ScenePlay) Init() {
@@ -685,7 +642,7 @@ func (scene *ScenePlay) Init() {
 		scene.Config.Height*scene.Config.Cellsize,
 	)
 
-	scene.InitTiles()
+	scene.Theme = scene.Config.ThemeManager.GetCurrentTheme()
 	scene.InitCache()
 
 	if scene.Config.DelayedStart && !scene.Config.Empty {
