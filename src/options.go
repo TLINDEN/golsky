@@ -117,7 +117,19 @@ func (scene *SceneOptions) Init() {
 		})
 	scene.SetInitialValue(wrap, scene.Config.Wrap)
 
+	themes := NewCombobox(
+		[]string{"dark", "light"},
+		scene.Config.Theme,
+		func(args *widget.ListComboButtonEntrySelectedEventArgs) {
+			scene.Config.SwitchTheme(args.Entry.(ListEntry).Name)
+		})
+	themelabel := NewLabel("Themes")
+	combocontainer := NewColumnContainer()
+	combocontainer.AddChild(themes)
+	combocontainer.AddChild(themelabel)
+
 	separator := NewSeparator(3)
+	separator2 := NewSeparator(3)
 
 	cancel := NewMenuButton("Close",
 		func(args *widget.ButtonClickedEventArgs) {
@@ -130,7 +142,13 @@ func (scene *SceneOptions) Init() {
 	rowContainer.AddChild(gridlines)
 	rowContainer.AddChild(evolution)
 	rowContainer.AddChild(wrap)
+
 	rowContainer.AddChild(separator)
+
+	rowContainer.AddChild(combocontainer)
+
+	rowContainer.AddChild(separator2)
+
 	rowContainer.AddChild(cancel)
 
 	scene.Ui = &ebitenui.UI{
