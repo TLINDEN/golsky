@@ -93,12 +93,6 @@ func (scene *SceneOptions) Init() {
 		})
 	scene.SetInitialValue(debugging, scene.Config.Debug)
 
-	invert := NewCheckbox("Invert",
-		func(args *widget.CheckboxChangedEventArgs) {
-			scene.Config.ToggleInvert()
-		})
-	scene.SetInitialValue(invert, scene.Config.Invert)
-
 	gridlines := NewCheckbox("Show grid lines",
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.ToggleGridlines()
@@ -138,7 +132,6 @@ func (scene *SceneOptions) Init() {
 
 	rowContainer.AddChild(pause)
 	rowContainer.AddChild(debugging)
-	rowContainer.AddChild(invert)
 	rowContainer.AddChild(gridlines)
 	rowContainer.AddChild(evolution)
 	rowContainer.AddChild(wrap)

@@ -15,26 +15,26 @@ import (
 
 // all the settings comming from commandline, but maybe tweaked later from the UI
 type Config struct {
-	Width, Height, Cellsize, Density                 int // measurements
-	ScreenWidth, ScreenHeight                        int
-	TPG                                              int      // ticks per generation/game speed, 1==max
-	Debug, Empty, Invert, Paused, Markmode, Drawmode bool     // game modi
-	ShowEvolution, ShowGrid, RunOneStep              bool     // flags
-	Rule                                             *Rule    // which rule to use, default: B3/S23
-	RLE                                              *rle.RLE // loaded GOL pattern from RLE file
-	Statefile                                        string   // load game state from it if non-nil
-	StateGrid                                        *Grid    // a grid from a statefile
-	Wrap                                             bool     // wether wraparound mode is in place or not
-	ShowVersion                                      bool
-	UseShader                                        bool // to use a shader to render alife cells
-	Restart, RestartGrid, RestartCache               bool
-	StartWithMenu                                    bool
-	Zoomfactor                                       int
-	ZoomOutFactor                                    int
-	InitialCamPos                                    []float64
-	DelayedStart                                     bool // if true game, we wait. like pause but program induced
-	Theme                                            string
-	ThemeManager                                     ThemeManager
+	Width, Height, Cellsize, Density         int // measurements
+	ScreenWidth, ScreenHeight                int
+	TPG                                      int      // ticks per generation/game speed, 1==max
+	Debug, Empty, Paused, Markmode, Drawmode bool     // game modi
+	ShowEvolution, ShowGrid, RunOneStep      bool     // flags
+	Rule                                     *Rule    // which rule to use, default: B3/S23
+	RLE                                      *rle.RLE // loaded GOL pattern from RLE file
+	Statefile                                string   // load game state from it if non-nil
+	StateGrid                                *Grid    // a grid from a statefile
+	Wrap                                     bool     // wether wraparound mode is in place or not
+	ShowVersion                              bool
+	UseShader                                bool // to use a shader to render alife cells
+	Restart, RestartGrid, RestartCache       bool
+	StartWithMenu                            bool
+	Zoomfactor                               int
+	ZoomOutFactor                            int
+	InitialCamPos                            []float64
+	DelayedStart                             bool // if true game, we wait. like pause but program induced
+	Theme                                    string
+	ThemeManager                             ThemeManager
 
 	// for internal profiling
 	ProfileFile     string
@@ -52,7 +52,7 @@ const (
 	DEFAULT_CELLSIZE    = 4
 	DEFAULT_ZOOMFACTOR  = 150
 	DEFAULT_GEOM        = "640x384"
-	DEFAULT_THEME       = "light" // inverse => "dark"
+	DEFAULT_THEME       = "standard" // "light" // inverse => "dark"
 )
 
 const KEYBINDINGS string = `
@@ -229,8 +229,7 @@ func ParseCommandline() (*Config, error) {
 	pflag.BoolVarP(&config.Empty, "empty", "e", false, "start with an empty screen")
 
 	// style
-	pflag.BoolVarP(&config.Invert, "invert", "i", false, "invert colors (dead cell: black)")
-	pflag.StringVarP(&config.Theme, "theme", "T", "light", "color theme: dark, light (default: light)")
+	pflag.StringVarP(&config.Theme, "theme", "T", DEFAULT_THEME, "color theme: standard, dark, light (default: standard)")
 
 	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
 	pflag.BoolVarP(&config.Wrap, "wrap-around", "w", false, "wrap around grid mode")
@@ -260,10 +259,6 @@ func ParseCommandline() (*Config, error) {
 
 	config.SetupCamera()
 
-	if config.Theme == "light" && config.Invert {
-		config.Theme = "dark"
-	}
-
 	config.ThemeManager = NewThemeManager(config.Theme, config.Cellsize)
 
 	//repr.Println(config)
@@ -276,21 +271,6 @@ func (config *Config) TogglePaused() {
 
 func (config *Config) ToggleDebugging() {
 	config.Debug = !config.Debug
-}
-
-func (config *Config) ToggleInvert() {
-	config.Invert = !config.Invert
-
-	switch config.ThemeManager.GetCurrentThemeName() {
-	case "dark":
-		config.ThemeManager.SetCurrentTheme("light")
-	case "light":
-		config.ThemeManager.SetCurrentTheme("dark")
-	default:
-		fmt.Println("unable to invert custom theme, only possible with dark and light themes.")
-	}
-
-	config.RestartCache = true
 }
 
 func (config *Config) SwitchTheme(theme string) {

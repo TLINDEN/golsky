@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // Color definitions. ColLife could be black or white depending on theme
@@ -28,18 +31,19 @@ type Theme struct {
 }
 
 // create a new theme
-func NewTheme(life, dead, old, age1, age2, age3, age4, grid color.RGBA, cellsize int, name string) Theme {
+func NewTheme(life, dead, old, age1, age2, age3, age4, grid string,
+	cellsize int, name string) Theme {
 	theme := Theme{
 		Name: name,
 		Colors: map[int]color.RGBA{
-			ColLife: life,
-			ColDead: dead,
-			ColGrid: grid,
-			ColAge1: age1,
-			ColAge2: age2,
-			ColAge3: age3,
-			ColAge4: age4,
-			ColOld:  old,
+			ColLife: HexColor2RGBA(life),
+			ColDead: HexColor2RGBA(dead),
+			ColGrid: HexColor2RGBA(grid),
+			ColAge1: HexColor2RGBA(age1),
+			ColAge2: HexColor2RGBA(age2),
+			ColAge3: HexColor2RGBA(age3),
+			ColAge4: HexColor2RGBA(age4),
+			ColOld:  HexColor2RGBA(old),
 		},
 	}
 
@@ -72,35 +76,49 @@ type ThemeManager struct {
 // Manager is used to easily switch themes from cli or menu
 func NewThemeManager(initial string, cellsize int) ThemeManager {
 	light := NewTheme(
-		color.RGBA{0, 0, 0, 0xff},       // life
-		color.RGBA{200, 200, 200, 0xff}, // dead
-		color.RGBA{255, 30, 30, 0xff},   // old
-		color.RGBA{255, 195, 97, 0xff},  // age 1..4
-		color.RGBA{255, 211, 140, 0xff},
-		color.RGBA{255, 227, 181, 0xff},
-		color.RGBA{255, 240, 224, 0xff},
-		color.RGBA{128, 128, 128, 0xff}, // grid
+		"000000", // life
+		"c8c8c8", // dead
+		"ff1e1e", // old
+		"ffc361", // age 1..4
+		"ffd38c",
+		"ffe3b5",
+		"fff0e0",
+		"808080", // grid
 		cellsize,
 		"light",
 	)
 
 	dark := NewTheme(
-		color.RGBA{200, 200, 200, 0xff}, // life
-		color.RGBA{0, 0, 0, 0xff},       // dead
-		color.RGBA{255, 30, 30, 0xff},   // old
-		color.RGBA{82, 38, 0, 0xff},     // age 1..4
-		color.RGBA{66, 35, 0, 0xff},
-		color.RGBA{43, 27, 0, 0xff},
-		color.RGBA{25, 17, 0, 0xff},
-		color.RGBA{128, 128, 128, 0xff}, // grid
+		"c8c8c8", // life
+		"000000", // dead
+		"ff1e1e", // old
+		"522600", // age 1..4
+		"422300",
+		"2b1b00",
+		"191100",
+		"808080", // grid
+		cellsize,
+		"dark",
+	)
+
+	standard := NewTheme(
+		"e15f0b", // life
+		"5a5a5a", // dead
+		"e13c0b", // old
+		"7b5e4b", // age 1..4
+		"735f52",
+		"6c6059",
+		"635d59",
+		"808080", // grid
 		cellsize,
 		"dark",
 	)
 
 	manager := ThemeManager{
 		Themes: map[string]Theme{
-			"dark":  dark,
-			"light": light,
+			"dark":     dark,
+			"light":    light,
+			"standard": standard,
 		},
 		Theme: initial,
 	}
@@ -120,4 +138,27 @@ func (manager *ThemeManager) SetCurrentTheme(theme string) {
 	if Exists(manager.Themes, theme) {
 		manager.Theme = theme
 	}
+}
+
+// fill a cell with the given color
+func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
+	vector.DrawFilledRect(
+		tile,
+		float32(1),
+		float32(1),
+		float32(cellsize),
+		float32(cellsize),
+		col, false,
+	)
+}
+
+func HexColor2RGBA(hex string) color.RGBA {
+	var r, g, b uint8
+
+	_, err := fmt.Sscanf(hex, "%02x%02x%02x", &r, &g, &b)
+	if err != nil {
+		log.Fatalf("failed to parse hex color: %s", err)
+	}
+
+	return color.RGBA{r, g, b, 255}
 }

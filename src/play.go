@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"log"
 	"unsafe"
 
@@ -705,16 +704,4 @@ func (scene *ScenePlay) CountNeighbors(x, y int) int {
 	sum -= bool2int(grid[y][x])
 
 	return sum
-}
-
-// fill a cell with the given color
-func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
-	vector.DrawFilledRect(
-		tile,
-		float32(1),
-		float32(1),
-		float32(cellsize),
-		float32(cellsize),
-		col, false,
-	)
 }

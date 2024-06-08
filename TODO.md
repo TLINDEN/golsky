@@ -14,6 +14,8 @@
   WritePixels:   https://github.com/TLINDEN/testgol/tree/wrpixels
 https://www.tasnimzotder.com/blog/optimizing-game-of-life-algorithm
 
+- show gridlines menu has no effect of grid was enabled with -g
+
 - Speed
   https://conwaylife.com/forums/viewtopic.php?f=7&t=3237
   
