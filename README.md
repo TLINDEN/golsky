@@ -14,6 +14,7 @@ John Conway himself: https://youtu.be/R9Plq-D1gEk?si=yYxs77e9yXxeSNbL
 
 Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
 
+Youtube video game preview:
 [![game preview](https://img.youtube.com/vi/xEto6Oew16I/0.jpg)](https://www.youtube.com/watch?v=xEto6Oew16I)
 
 # Features
