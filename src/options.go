@@ -82,35 +82,36 @@ func (scene *SceneOptions) Init() {
 	rowContainer := NewRowContainer("Options")
 
 	pause := NewCheckbox("Pause",
+		scene.Config.Paused,
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.TogglePaused()
 		})
 
 	debugging := NewCheckbox("Debugging",
+		scene.Config.Debug,
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.ToggleDebugging()
 		})
-	scene.SetInitialValue(debugging, scene.Config.Debug)
 
 	gridlines := NewCheckbox("Show grid lines",
+		scene.Config.ShowGrid,
 		func(args *widget.CheckboxChangedEventArgs) {
 			fmt.Println("CHECKBOX CALLED")
 			repr.Println(args.State)
 			scene.Config.ToggleGridlines()
 		})
-	scene.SetInitialValue(gridlines, scene.Config.ShowGrid)
 
 	evolution := NewCheckbox("Show evolution traces",
+		scene.Config.ShowEvolution,
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.ToggleEvolution()
 		})
-	scene.SetInitialValue(evolution, scene.Config.ShowEvolution)
 
 	wrap := NewCheckbox("Wrap around edges",
+		scene.Config.Wrap,
 		func(args *widget.CheckboxChangedEventArgs) {
 			scene.Config.ToggleWrap()
 		})
-	scene.SetInitialValue(wrap, scene.Config.Wrap)
 
 	themes := NewCombobox(
 		[]string{"dark", "light"},
@@ -118,6 +119,7 @@ func (scene *SceneOptions) Init() {
 		func(args *widget.ListComboButtonEntrySelectedEventArgs) {
 			scene.Config.SwitchTheme(args.Entry.(ListEntry).Name)
 		})
+
 	themelabel := NewLabel("Themes")
 	combocontainer := NewColumnContainer()
 	combocontainer.AddChild(themes)

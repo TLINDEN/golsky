@@ -42,10 +42,16 @@ func NewMenuButton(
 
 func NewCheckbox(
 	text string,
+	initialvalue bool,
 	action func(args *widget.CheckboxChangedEventArgs)) *widget.LabeledCheckbox {
 
 	checkboxImage, _ := LoadCheckboxImage()
 	buttonImage, _ := LoadButtonImage()
+
+	var state widget.WidgetState
+	if initialvalue {
+		state = widget.WidgetChecked
+	}
 
 	return widget.NewLabeledCheckbox(
 		widget.LabeledCheckboxOpts.CheckboxOpts(
@@ -54,6 +60,7 @@ func NewCheckbox(
 			),
 			widget.CheckboxOpts.Image(checkboxImage),
 			widget.CheckboxOpts.StateChangedHandler(action),
+			widget.CheckboxOpts.InitialState(state),
 		),
 		widget.LabeledCheckboxOpts.LabelOpts(
 			widget.LabelOpts.Text(text, *FontRenderer.FontSmall,
