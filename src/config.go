@@ -50,7 +50,7 @@ const (
 	DEFAULT_GRID_WIDTH  = 600
 	DEFAULT_GRID_HEIGHT = 400
 	DEFAULT_CELLSIZE    = 4
-	DEFAULT_ZOOMFACTOR  = 150
+	DEFAULT_ZOOMFACTOR  = 400
 	DEFAULT_GEOM        = "640x384"
 	DEFAULT_THEME       = "standard" // "light" // inverse => "dark"
 )
@@ -75,7 +75,7 @@ const KEYBINDINGS string = `
 `
 
 func (config *Config) SetupCamera() {
-	config.Zoomfactor = DEFAULT_ZOOMFACTOR
+	config.Zoomfactor = DEFAULT_ZOOMFACTOR / config.Cellsize
 
 	// calculate the initial cam pos. It is negative if the total grid
 	// size  is smaller than  the screen  in a centered  position, but
@@ -129,7 +129,7 @@ func (config *Config) ParseGeom(geom string) error {
 	config.ScreenWidth = width
 	config.ScreenHeight = height
 
-	config.Cellsize = DEFAULT_CELLSIZE
+	//config.Cellsize = DEFAULT_CELLSIZE
 
 	return nil
 }
