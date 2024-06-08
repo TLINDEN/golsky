@@ -223,21 +223,20 @@ func ParseCommandline() (*Config, error) {
 	pflag.StringVarP(&rlefile, "pattern-file", "f", "", "RLE or LIF pattern file")
 
 	pflag.BoolVarP(&config.ShowVersion, "version", "v", false, "show version")
+	pflag.BoolVarP(&config.ShowGrid, "show-grid", "g", false, "draw grid lines")
+	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
+
 	pflag.BoolVarP(&config.Paused, "paused", "p", false, "do not start simulation (use space to start)")
 	pflag.BoolVarP(&config.Debug, "debug", "d", false, "show debug info")
-	pflag.BoolVarP(&config.ShowGrid, "show-grid", "g", false, "draw grid lines")
 	pflag.BoolVarP(&config.Empty, "empty", "e", false, "start with an empty screen")
 
 	// style
 	pflag.StringVarP(&config.Theme, "theme", "T", DEFAULT_THEME, "color theme: standard, dark, light (default: standard)")
 
-	pflag.BoolVarP(&config.ShowEvolution, "show-evolution", "s", false, "show evolution traces")
 	pflag.BoolVarP(&config.Wrap, "wrap-around", "w", false, "wrap around grid mode")
 	pflag.BoolVarP(&config.UseShader, "use-shader", "k", false, "use shader for cell rendering")
 
 	pflag.StringVarP(&config.ProfileFile, "profile-file", "", "", "enable profiling")
-	pflag.BoolVarP(&config.ProfileDraw, "profile-draw", "", false, "profile draw method (default false)")
-	pflag.Int64VarP(&config.ProfileMaxLoops, "profile-max-loops", "", 10, "how many loops to execute (default 10)")
 
 	pflag.Parse()
 
@@ -278,8 +277,10 @@ func (config *Config) SwitchTheme(theme string) {
 }
 
 func (config *Config) ToggleGridlines() {
+	fmt.Printf("toggle grid lines, current: %t\n", config.ShowGrid)
 	config.ShowGrid = !config.ShowGrid
 	config.RestartCache = true
+	fmt.Printf("toggle grid lines, new: %t\n", config.ShowGrid)
 }
 
 func (config *Config) ToggleEvolution() {

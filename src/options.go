@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
+	"github.com/alecthomas/repr"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -69,14 +71,11 @@ func (scene *SceneOptions) Draw(screen *ebiten.Image) {
 }
 
 func (scene *SceneOptions) SetInitialValue(w *widget.LabeledCheckbox, value bool) {
-	var intval int
 	if value {
-		intval = 1
+		w.SetState(
+			widget.WidgetChecked,
+		)
 	}
-
-	w.SetState(
-		widget.WidgetState(intval),
-	)
 }
 
 func (scene *SceneOptions) Init() {
@@ -95,6 +94,8 @@ func (scene *SceneOptions) Init() {
 
 	gridlines := NewCheckbox("Show grid lines",
 		func(args *widget.CheckboxChangedEventArgs) {
+			fmt.Println("CHECKBOX CALLED")
+			repr.Println(args.State)
 			scene.Config.ToggleGridlines()
 		})
 	scene.SetInitialValue(gridlines, scene.Config.ShowGrid)

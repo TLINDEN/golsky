@@ -184,6 +184,7 @@ func (scene *ScenePlay) CheckInput() {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		scene.Config.Markmode = true
+		scene.Config.Drawmode = false
 		scene.Config.Paused = true
 	}
 
