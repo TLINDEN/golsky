@@ -5,8 +5,7 @@
 [![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/tlinden/golsky/blob/master/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tlinden/golsky)](https://goreportcard.com/report/github.com/tlinden/golsky) 
 
-I wanted to play around a little bit with [**Conways Game of
-Life**](https://conwaylife.com/)
+I wanted to play around a little bit with [**Conways Game of Life**](https://conwaylife.com/)
 in golang and here's the  result. It's a simple game using
 [ebitengine](https://github.com/hajimehoshi/ebiten/).
 
@@ -14,9 +13,19 @@ John Conway himself: https://youtu.be/R9Plq-D1gEk?si=yYxs77e9yXxeSNbL
 
 Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
 
-Youtube video game preview:
+# Screenshots
+[![golsky-mainmenu.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-mainmenu.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-mainmenu.png)
+[![golsky-options.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-options.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-options.png)
+[![golsky-bindings.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-bindings.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-bindings.png)
+[![golsky-evolution-trace.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-evolution-trace.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-evolution-trace.png)
+[![golsky-zoom.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-zoom.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-zoom.png)
+[![golsky-debug.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-debug.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-debug.png)
+[![golsky-capture.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-capture.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-capture.png)
+[![golsky-captured.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-captured.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-captured.png)
+[![golsky-dark-theme.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-dark-theme.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-dark-theme.png)
 
-[![game preview](https://img.youtube.com/vi/xEto6Oew16I/0.jpg)](https://www.youtube.com/watch?v=xEto6Oew16I)
+
+[Youtube video game preview](https://www.youtube.com/watch?v=xEto6Oew16I)
 
 # Features
 
