@@ -113,8 +113,15 @@ func (scene *SceneOptions) Init() {
 			scene.Config.ToggleWrap()
 		})
 
+	themenames := make([]string, len(THEMES))
+	i := 0
+	for name := range THEMES {
+		themenames[i] = name
+		i++
+	}
+
 	themes := NewCombobox(
-		[]string{"dark", "light"},
+		themenames,
 		scene.Config.Theme,
 		func(args *widget.ListComboButtonEntrySelectedEventArgs) {
 			scene.Config.SwitchTheme(args.Entry.(ListEntry).Name)

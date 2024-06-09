@@ -30,20 +30,56 @@ type Theme struct {
 	Name   string
 }
 
+type ThemeDef struct {
+	life, dead, grid, old, age1, age2, age3, age4 string
+}
+
+var THEMES = map[string]ThemeDef{
+	"standard": {
+		life: "e15f0b",
+		dead: "5a5a5a",
+		grid: "e13c0b",
+		old:  "7b5e4b",
+		age1: "735f52",
+		age2: "6c6059",
+		age3: "635d59",
+		age4: "808080",
+	},
+	"dark": {
+		life: "c8c8c8",
+		dead: "000000",
+		grid: "ff1e1e",
+		old:  "522600",
+		age1: "422300",
+		age2: "2b1b00",
+		age3: "191100",
+		age4: "808080",
+	},
+	"light": {
+		life: "000000",
+		dead: "c8c8c8",
+		grid: "ff1e1e",
+		old:  "ffc361",
+		age1: "ffd38c",
+		age2: "ffe3b5",
+		age3: "fff0e0",
+		age4: "808080",
+	},
+}
+
 // create a new theme
-func NewTheme(life, dead, old, age1, age2, age3, age4, grid string,
-	cellsize int, name string) Theme {
+func NewTheme(def ThemeDef, cellsize int, name string) Theme {
 	theme := Theme{
 		Name: name,
 		Colors: map[int]color.RGBA{
-			ColLife: HexColor2RGBA(life),
-			ColDead: HexColor2RGBA(dead),
-			ColGrid: HexColor2RGBA(grid),
-			ColAge1: HexColor2RGBA(age1),
-			ColAge2: HexColor2RGBA(age2),
-			ColAge3: HexColor2RGBA(age3),
-			ColAge4: HexColor2RGBA(age4),
-			ColOld:  HexColor2RGBA(old),
+			ColLife: HexColor2RGBA(def.life),
+			ColDead: HexColor2RGBA(def.dead),
+			ColGrid: HexColor2RGBA(def.grid),
+			ColAge1: HexColor2RGBA(def.age1),
+			ColAge2: HexColor2RGBA(def.age2),
+			ColAge3: HexColor2RGBA(def.age3),
+			ColAge4: HexColor2RGBA(def.age4),
+			ColOld:  HexColor2RGBA(def.old),
 		},
 	}
 
@@ -75,52 +111,14 @@ type ThemeManager struct {
 
 // Manager is used to easily switch themes from cli or menu
 func NewThemeManager(initial string, cellsize int) ThemeManager {
-	light := NewTheme(
-		"000000", // life
-		"c8c8c8", // dead
-		"ff1e1e", // old
-		"ffc361", // age 1..4
-		"ffd38c",
-		"ffe3b5",
-		"fff0e0",
-		"808080", // grid
-		cellsize,
-		"light",
-	)
-
-	dark := NewTheme(
-		"c8c8c8", // life
-		"000000", // dead
-		"ff1e1e", // old
-		"522600", // age 1..4
-		"422300",
-		"2b1b00",
-		"191100",
-		"808080", // grid
-		cellsize,
-		"dark",
-	)
-
-	standard := NewTheme(
-		"e15f0b", // life
-		"5a5a5a", // dead
-		"e13c0b", // old
-		"7b5e4b", // age 1..4
-		"735f52",
-		"6c6059",
-		"635d59",
-		"808080", // grid
-		cellsize,
-		"dark",
-	)
-
 	manager := ThemeManager{
-		Themes: map[string]Theme{
-			"dark":     dark,
-			"light":    light,
-			"standard": standard,
-		},
 		Theme: initial,
+	}
+
+	manager.Themes = make(map[string]Theme, len(THEMES))
+
+	for name, def := range THEMES {
+		manager.Themes[name] = NewTheme(def, cellsize, name)
 	}
 
 	return manager

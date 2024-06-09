@@ -274,6 +274,7 @@ func (config *Config) ToggleDebugging() {
 
 func (config *Config) SwitchTheme(theme string) {
 	config.ThemeManager.SetCurrentTheme(theme)
+	config.RestartCache = true
 }
 
 func (config *Config) ToggleGridlines() {
