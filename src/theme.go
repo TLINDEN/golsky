@@ -138,7 +138,20 @@ func (manager *ThemeManager) SetCurrentTheme(theme string) {
 	}
 }
 
-// fill a cell with the given color
+// Fill a cell with the given color.
+//
+// We do not  draw the cell at  0,0 of it's position but  at 1,1. This
+// creates a top and lef  transparent. By using a different background
+// for the whole grid we can then  decide wether to show grid lines or
+// not.
+//
+// If no  gridlines are  selected the background  will just  be filled
+// with the DEAD  color. However, IF we are to  show the gridlines, we
+// fill it  with a lighter color.  The transparent edges of  all tiles
+// then create the grid.
+//
+// So we don't draw a grid, we just left a grid behind, which saves us
+// from a lot of drawing operations.
 func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
 	vector.DrawFilledRect(
 		tile,
