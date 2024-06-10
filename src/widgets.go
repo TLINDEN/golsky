@@ -5,6 +5,7 @@ import (
 
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func NewMenuButton(
@@ -38,6 +39,32 @@ func NewMenuButton(
 
 		widget.ButtonOpts.ClickedHandler(action),
 	)
+}
+
+func NewToolbarButton(
+	icon *ebiten.Image,
+	action func(args *widget.ButtonClickedEventArgs)) *widget.Container {
+
+	buttonImage, _ := LoadButtonImage()
+
+	iconContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
+		widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+			HorizontalPosition: widget.AnchorLayoutPositionCenter,
+			VerticalPosition:   widget.AnchorLayoutPositionCenter,
+		})),
+	)
+
+	button := widget.NewButton(
+		widget.ButtonOpts.Image(buttonImage),
+		widget.ButtonOpts.ClickedHandler(action),
+	)
+
+	iconContainer.AddChild(button)
+
+	iconContainer.AddChild(widget.NewGraphic(widget.GraphicOpts.Image(icon)))
+
+	return iconContainer
 }
 
 func NewCheckbox(
