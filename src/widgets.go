@@ -215,6 +215,37 @@ func (container *RowContainer) Container() *widget.Container {
 	return container.Root
 }
 
+// setup a top level toolbar container
+func NewTopRowContainer(title string) *RowContainer {
+	buttonImageHover := image.NewNineSlice(Assets["button-9slice3"], [3]int{3, 3, 3}, [3]int{3, 3, 3})
+
+	uiContainer := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewAnchorLayout()),
+	)
+
+	rowContainer := widget.NewContainer(
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+				HorizontalPosition: widget.AnchorLayoutPositionStart,
+				VerticalPosition:   widget.AnchorLayoutPositionStart,
+			}),
+		),
+		widget.ContainerOpts.Layout(widget.NewRowLayout(
+			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
+			widget.RowLayoutOpts.Padding(widget.NewInsetsSimple(8)),
+			widget.RowLayoutOpts.Spacing(0),
+		)),
+		widget.ContainerOpts.BackgroundImage(buttonImageHover),
+	)
+
+	uiContainer.AddChild(rowContainer)
+
+	return &RowContainer{
+		Root: uiContainer,
+		Row:  rowContainer,
+	}
+}
+
 // set arg to false if no background needed
 func NewRowContainer(title string) *RowContainer {
 	buttonImageHover := image.NewNineSlice(Assets["button-9slice3"], [3]int{3, 3, 3}, [3]int{3, 3, 3})

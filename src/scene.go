@@ -25,4 +25,5 @@ const (
 	Play        // actual playing happens here
 	Options
 	Keybindings
+	Toolbar
 )

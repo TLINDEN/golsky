@@ -6,6 +6,7 @@ import (
 	"log"
 	"unsafe"
 
+	uiinput "github.com/ebitenui/ebitenui/input"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -424,11 +425,12 @@ func (scene *ScenePlay) Update() error {
 		return quit
 	}
 
-	scene.CheckInput()
-	scene.CheckDrawingInput()
-	scene.CheckDraggingInput()
-	scene.CheckMarkInput()
-
+	if !uiinput.UIActive {
+		scene.CheckInput()
+		scene.CheckDrawingInput()
+		scene.CheckDraggingInput()
+		scene.CheckMarkInput()
+	}
 	if !scene.Config.Paused || scene.RunOneStep {
 		scene.UpdateCells()
 	}
