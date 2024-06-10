@@ -10,7 +10,6 @@ type Game struct {
 	CurrentScene                                    SceneName
 	Config                                          *Config
 	Scale                                           float32
-	Screen                                          *ebiten.Image
 }
 
 func NewGame(config *Config, startscene SceneName) *Game {
@@ -24,10 +23,10 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	// setup scene[s]
 	game.CurrentScene = startscene
 	game.Scenes[Play] = NewPlayScene(game, config)
+	game.Scenes[Toolbar] = NewToolbarScene(game, config)
 	game.Scenes[Menu] = NewMenuScene(game, config)
 	game.Scenes[Options] = NewOptionsScene(game, config)
 	game.Scenes[Keybindings] = NewKeybindingsScene(game, config)
-	game.Scenes[Toolbar] = NewToolbarScene(game, config)
 
 	// setup environment
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
@@ -35,7 +34,6 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetScreenClearedEveryFrame(true)
 
-	game.Screen = ebiten.NewImage(game.ScreenWidth, game.ScreenHeight)
 	return game
 }
 
@@ -50,13 +48,18 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (game *Game) Update() error {
-	scene := game.GetCurrentScene()
+	for _, scene := range game.Scenes {
+		if scene.IsPrimary() {
+			if quit := scene.Update(); quit != nil {
+				return quit
+			}
 
-	if quit := scene.Update(); quit != nil {
-		return quit
+		}
 	}
 
+	scene := game.GetCurrentScene()
 	next := scene.GetNext()
+
 	if next != game.CurrentScene {
 		game.Scenes[next].SetPrevious(game.CurrentScene)
 		scene.ResetNext()
@@ -77,6 +80,7 @@ func (game *Game) Draw(screen *ebiten.Image) {
 			if current == game.CurrentScene {
 				// avoid to redraw it in the next step
 				skip = true
+				break
 			}
 		}
 	}

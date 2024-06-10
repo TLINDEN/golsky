@@ -19,7 +19,7 @@ type Images struct {
 }
 
 const (
-	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02f, Zoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s"
+	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02f, Zoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s, UI Active: %t"
 )
 
 type ScenePlay struct {
@@ -485,10 +485,8 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 
 	scene.DrawDebug(screen)
 
-	op.GeoM.Reset()
-	op.GeoM.Translate(0, 0)
-
-	scene.Game.Screen.DrawImage(screen, op)
+	// draw the toolbar directly from here, because otherwise it flickers
+	scene.Game.Scenes[Toolbar].Draw(screen)
 }
 
 func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
@@ -556,7 +554,7 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 			scene.Game.Scale, scene.Camera.ZoomFactor,
 			scene.Camera.Position[0], scene.Camera.Position[1],
 			x, y,
-			paused)
+			paused, uiinput.UIActive)
 
 		FontRenderer.Renderer.SetSizePx(10 + int(scene.Game.Scale*10))
 		FontRenderer.Renderer.SetTarget(screen)
