@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"os"
 
@@ -101,6 +102,7 @@ func (scene *SceneMenu) Init() {
 
 	options := NewMenuButton("Options",
 		func(args *widget.ButtonClickedEventArgs) {
+			fmt.Println("menu => options")
 			scene.SetNext(Options)
 		})
 

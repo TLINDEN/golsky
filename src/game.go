@@ -48,8 +48,10 @@ func (game *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (game *Game) Update() error {
+	currentscene := game.GetCurrentScene()
+
 	for _, scene := range game.Scenes {
-		if scene.IsPrimary() {
+		if scene.IsPrimary() || scene == currentscene {
 			if quit := scene.Update(); quit != nil {
 				return quit
 			}
@@ -57,12 +59,11 @@ func (game *Game) Update() error {
 		}
 	}
 
-	scene := game.GetCurrentScene()
-	next := scene.GetNext()
+	next := currentscene.GetNext()
 
 	if next != game.CurrentScene {
 		game.Scenes[next].SetPrevious(game.CurrentScene)
-		scene.ResetNext()
+		currentscene.ResetNext()
 		game.CurrentScene = next
 	}
 

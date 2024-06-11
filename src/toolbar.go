@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
-	"os"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
@@ -80,12 +80,13 @@ func (scene *SceneToolbar) SetInitialValue(w *widget.LabeledCheckbox, value bool
 func (scene *SceneToolbar) Init() {
 	rowContainer := NewTopRowContainer("Toolbar")
 
-	cancel := NewMenuButton("Close",
+	options := NewToolbarButton(Assets["options"],
 		func(args *widget.ButtonClickedEventArgs) {
-			os.Exit(0)
+			fmt.Println("options")
+			scene.SetNext(Options)
 		})
 
-	rowContainer.AddChild(cancel)
+	rowContainer.AddChild(options)
 
 	scene.Ui = &ebitenui.UI{
 		Container: rowContainer.Container(),
