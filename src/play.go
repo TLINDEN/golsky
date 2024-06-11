@@ -174,50 +174,40 @@ func (scene *ScenePlay) CheckExit() error {
 }
 
 func (scene *ScenePlay) CheckInput() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	// primary functions, always available
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
 		scene.SetNext(Menu)
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyO) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyO):
 		scene.SetNext(Options)
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyC):
 		scene.Config.Markmode = true
 		scene.Config.Drawmode = false
 		scene.Config.Paused = true
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyI) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyI):
 		scene.Config.Drawmode = true
 		scene.Config.Paused = true
 	}
 
 	if scene.Config.Markmode {
+		// no need to check any more input in mark mode
 		return
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		scene.Config.TogglePaused()
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyPageDown) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyPageDown):
 		if scene.TPG < 120 {
 			scene.TPG++
 		}
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyPageUp) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyPageUp):
 		if scene.TPG >= 1 {
 			scene.TPG--
 		}
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyS):
 		scene.SaveState()
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+	case inpututil.IsKeyJustPressed(ebiten.KeyD):
 		scene.Config.Debug = !scene.Config.Debug
 	}
 
@@ -230,15 +220,12 @@ func (scene *ScenePlay) CheckInput() {
 
 func (scene *ScenePlay) CheckDrawingInput() {
 	if scene.Config.Drawmode {
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		switch {
+		case ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft):
 			scene.ToggleCellOnCursorPos(Alive)
-		}
-
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+		case ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight):
 			scene.ToggleCellOnCursorPos(Dead)
-		}
-
-		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
 			scene.Config.Drawmode = false
 		}
 	}
@@ -282,16 +269,14 @@ func (scene *ScenePlay) CheckDraggingInput() {
 	}
 
 	// also support the arrow keys to move the canvas
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+	switch {
+	case ebiten.IsKeyPressed(ebiten.KeyArrowLeft):
 		scene.Camera.Position[0] -= 1
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+	case ebiten.IsKeyPressed(ebiten.KeyArrowRight):
 		scene.Camera.Position[0] += 1
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+	case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
 		scene.Camera.Position[1] -= 1
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		scene.Camera.Position[1] += 1
 	}
 

@@ -1,7 +1,6 @@
 - add all other options like size etc
 - add gif export
 - add toolbar (not working yet, see branch trackui)
-- turn input ifs to switch
 - only draw visible part of the world
 - print current mode to the bottom like pause, insert and mark
 - add https://www.ibiblio.org/lifepatterns/october1970.html
