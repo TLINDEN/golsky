@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"os"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
@@ -19,6 +18,7 @@ type SceneMenu struct {
 	Ui        *ebitenui.UI
 	FontColor color.RGBA
 	First     bool
+	Exit      bool
 }
 
 func NewMenuScene(game *Game, config *Config) Scene {
@@ -53,6 +53,10 @@ func (scene *SceneMenu) SetNext(next SceneName) {
 
 func (scene *SceneMenu) Update() error {
 	scene.Ui.Update()
+
+	if scene.Exit {
+		return ebiten.Termination
+	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsKeyJustPressed(ebiten.KeyQ) {
 		scene.Config.DelayedStart = false
@@ -120,7 +124,7 @@ func (scene *SceneMenu) Init() {
 
 	quit := NewMenuButton("Exit Golsky",
 		func(args *widget.ButtonClickedEventArgs) {
-			os.Exit(0)
+			scene.Exit = true
 		})
 
 	rowContainer.AddChild(empty)

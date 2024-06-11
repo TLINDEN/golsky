@@ -10,7 +10,6 @@ type Game struct {
 	CurrentScene                                    SceneName
 	Config                                          *Config
 	Scale                                           float32
-	Screen                                          *ebiten.Image
 }
 
 func NewGame(config *Config, startscene SceneName) *Game {
@@ -34,7 +33,6 @@ func NewGame(config *Config, startscene SceneName) *Game {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetScreenClearedEveryFrame(true)
 
-	game.Screen = ebiten.NewImage(game.ScreenWidth, game.ScreenHeight)
 	return game
 }
 

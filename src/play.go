@@ -482,11 +482,6 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 	scene.Camera.Render(scene.World, screen)
 
 	scene.DrawDebug(screen)
-
-	op.GeoM.Reset()
-	op.GeoM.Translate(0, 0)
-
-	scene.Game.Screen.DrawImage(screen, op)
 }
 
 func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
