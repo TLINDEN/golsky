@@ -278,10 +278,8 @@ func (config *Config) SwitchTheme(theme string) {
 }
 
 func (config *Config) ToggleGridlines() {
-	fmt.Printf("toggle grid lines, current: %t\n", config.ShowGrid)
 	config.ShowGrid = !config.ShowGrid
 	config.RestartCache = true
-	fmt.Printf("toggle grid lines, new: %t\n", config.ShowGrid)
 }
 
 func (config *Config) ToggleEvolution() {

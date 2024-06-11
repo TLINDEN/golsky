@@ -1,20 +1,18 @@
 - add all other options like size etc
 - add gif export
-- add toolbar
+- add toolbar (not working yet, see branch trackui)
 - turn input ifs to switch
 - only draw visible part of the world
-- use themes instead of the current weird color lists
 - print current mode to the bottom like pause, insert and mark
 - add https://www.ibiblio.org/lifepatterns/october1970.html
 - history: dont count age but do calc to get index to age tile based on cell age
 - maybe pre calc neighbors as 8 slice of pointers to neighboring cells to faster do the count
+  see various-tests/perf-2dim-pointers/: it's NOT faster :(
 - https://mattnakama.com/blog/go-branchless-coding/
 - add performance measurements, see:
   DrawTriangles: https://github.com/TLINDEN/testgol
   WritePixels:   https://github.com/TLINDEN/testgol/tree/wrpixels
 https://www.tasnimzotder.com/blog/optimizing-game-of-life-algorithm
-
-- show gridlines menu has no effect of grid was enabled with -g
 
 - Speed
   https://conwaylife.com/forums/viewtopic.php?f=7&t=3237

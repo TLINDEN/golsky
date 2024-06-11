@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 
-	"github.com/alecthomas/repr"
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -96,8 +94,6 @@ func (scene *SceneOptions) Init() {
 	gridlines := NewCheckbox("Show grid lines",
 		scene.Config.ShowGrid,
 		func(args *widget.CheckboxChangedEventArgs) {
-			fmt.Println("CHECKBOX CALLED")
-			repr.Println(args.State)
 			scene.Config.ToggleGridlines()
 		})
 
