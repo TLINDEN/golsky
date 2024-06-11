@@ -24,6 +24,7 @@ Based on: https://youtu.be/FWSR_7kZuYg?si=ix1dmo76D8AmF25F
 [![golsky-captured.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-captured.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-captured.png)
 [![golsky-dark-theme.png](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/256_golsky-dark-theme.png)](https://github.com/TLINDEN/golsky/blob/main/.github/assets/screenshots/golsky-dark-theme.png)
 
+https://github.com/TLINDEN/golsky/blob/main/.github/assets/demo.mp4
 
 [Youtube video game preview](https://www.youtube.com/watch?v=xEto6Oew16I)
 
