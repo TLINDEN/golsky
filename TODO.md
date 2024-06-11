@@ -12,7 +12,10 @@
   DrawTriangles: https://github.com/TLINDEN/testgol
   WritePixels:   https://github.com/TLINDEN/testgol/tree/wrpixels
 https://www.tasnimzotder.com/blog/optimizing-game-of-life-algorithm
-
+- pre-draw the grid separately to a cache grid image, then during
+  rendering, first draw the dead background, then the life cells, and
+  lastly the grid - if enabled. If disabled, there's be no gap between
+  the cells anymore.
 - Speed
   https://conwaylife.com/forums/viewtopic.php?f=7&t=3237
   
