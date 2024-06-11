@@ -7,6 +7,8 @@
 - history: dont count age but do calc to get index to age tile based on cell age
 - maybe pre calc neighbors as 8 slice of pointers to neighboring cells to faster do the count
   see various-tests/perf-2dim-pointers/: it's NOT faster :(
+- use an array of 8 pointers to neighbors. on edge just add either fake dead neighbors or the wrap around neighbors.
+- try arche ecs variant with either a component of the cells neighbors or using relations.
 - https://mattnakama.com/blog/go-branchless-coding/
 - add performance measurements, see:
   DrawTriangles: https://github.com/TLINDEN/testgol
