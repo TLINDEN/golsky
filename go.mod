@@ -16,6 +16,7 @@ require (
 	github.com/ebitenui/ebitenui v0.5.8-0.20240608175527-424f62327b21 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/jezek/xgb v1.1.1 // indirect
+	github.com/mlange-42/arche v0.13.0 // indirect
 	github.com/tinne26/etxt v0.0.8 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/sync v0.7.0 // indirect

@@ -9,3 +9,4 @@ Running with 1500x1500 grid 5k times
 | perf-2dim-pointers-array     | same as above but array of neighbors instead of slice                       | 00:02:40          |
 | perf-2dim-pointers-all-array | use arrays for everything, static 1500x1500                                 | infinite, aborted |
 | perf-1dim                    | use 1d grid of bools, access using y*x, no further tuning                   | 00:03:24          |
+| perf-ecs                     | use arche ecs, unusable                                                     | 00:14:51          |
