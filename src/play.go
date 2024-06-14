@@ -119,14 +119,14 @@ func (scene *ScenePlay) UpdateCells() {
 	// compute life status of cells
 	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
-			state := scene.Grids[scene.Index].Data[y][x] // 0|1 == dead or alive
-			neighbors := scene.CountNeighbors(x, y)      // alive neighbor count
+			state := scene.Grids[scene.Index].Data[y][x].State // 0|1 == dead or alive
+			neighbors := scene.Grids[scene.Index].CountNeighbors(x, y)
 
 			// actually apply the current rules
 			nextstate := scene.CheckRule(state, neighbors)
 
 			// change state of current cell in next grid
-			scene.Grids[next].Data[y][x] = nextstate
+			scene.Grids[next].Data[y][x].State = nextstate
 
 			if scene.Config.ShowEvolution {
 				// set history  to current generation so we  can infer the
@@ -136,9 +136,6 @@ func (scene *ScenePlay) UpdateCells() {
 				if state != nextstate {
 					scene.History[y][x] = scene.Generations
 				}
-
-				// 10FPS:
-				//scene.History.Data[y][x] = (state ^ (1 ^ nextstate)) * (scene.Generations - scene.History.Data[y][x])
 			}
 		}
 	}
@@ -376,7 +373,7 @@ func (scene *ScenePlay) SaveRectRLE() {
 		grid[y] = make([]bool, width)
 
 		for x := 0; x < width; x++ {
-			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx]
+			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx].State
 		}
 	}
 
@@ -429,7 +426,7 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive bool) {
 	y := int(worldY) / scene.Config.Cellsize
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
-		scene.Grids[scene.Index].Data[y][x] = alive
+		scene.Grids[scene.Index].Data[y][x].State = alive
 		scene.History[y][x] = 1
 	}
 }
@@ -455,7 +452,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			if scene.Config.ShowEvolution {
 				scene.DrawEvolution(screen, x, y, op)
 			} else {
-				if scene.Grids[scene.Index].Data[y][x] {
+				if scene.Grids[scene.Index].Data[y][x].State {
 					scene.World.DrawImage(scene.Theme.Tile(ColLife), op)
 				}
 			}
@@ -472,7 +469,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
 	age := scene.Generations - scene.History[y][x]
 
-	switch scene.Grids[scene.Index].Data[y][x] {
+	switch scene.Grids[scene.Index].Data[y][x].State {
 	case Alive:
 		if age > 50 && scene.Config.ShowEvolution {
 			scene.World.DrawImage(scene.Theme.Tile(ColOld), op)
@@ -580,8 +577,8 @@ func (scene *ScenePlay) InitCache() {
 
 // initialize grid[s], either using pre-computed from state or rle file, or random
 func (scene *ScenePlay) InitGrid() {
-	grida := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
-	gridb := NewGrid(scene.Config.Width, scene.Config.Height, scene.Config.Density, scene.Config.Empty)
+	grida := NewGrid(scene.Config)
+	gridb := NewGrid(scene.Config)
 
 	// startup is delayed until user has selected options
 	grida.FillRandom()
@@ -649,40 +646,4 @@ func (scene *ScenePlay) Init() {
 
 func bool2int(b bool) int {
 	return int(*(*byte)(unsafe.Pointer(&b)))
-}
-
-// count the living neighbors of a cell
-func (scene *ScenePlay) CountNeighbors(x, y int) int {
-	var sum int
-
-	grid := scene.Grids[scene.Index].Data
-
-	for nbgX := -1; nbgX < 2; nbgX++ {
-		for nbgY := -1; nbgY < 2; nbgY++ {
-			var col, row int
-			if scene.Config.Wrap {
-				// In wrap mode we look at all the 8 neighbors surrounding us.
-				// In case we are on an edge we'll look at the neighbor on the
-				//  other side  of the  grid, thus  wrapping lookahead  around
-				// using the mod() function.
-				col = (x + nbgX + scene.Config.Width) % scene.Config.Width
-				row = (y + nbgY + scene.Config.Height) % scene.Config.Height
-
-			} else {
-				// In traditional grid mode the edges are deadly
-				if x+nbgX < 0 || x+nbgX >= scene.Config.Width || y+nbgY < 0 || y+nbgY >= scene.Config.Height {
-					continue
-				}
-				col = x + nbgX
-				row = y + nbgY
-			}
-
-			sum += bool2int(grid[row][col])
-		}
-	}
-
-	// don't count ourselfes though
-	sum -= bool2int(grid[y][x])
-
-	return sum
 }
