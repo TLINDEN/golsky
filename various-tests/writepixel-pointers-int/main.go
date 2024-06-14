@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime/pprof"
+	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -16,8 +17,52 @@ type Images struct {
 	Black, White *ebiten.Image
 }
 
+type Cell struct {
+	State         uint8
+	Neighbors     [8]*Cell
+	NeighborCount int
+}
+
+func bool2int(b bool) int {
+	return int(*(*byte)(unsafe.Pointer(&b)))
+}
+
+func (cell *Cell) Count(x, y int) uint8 {
+	var sum uint8
+
+	for idx := 0; idx < cell.NeighborCount; idx++ {
+		sum += cell.Neighbors[idx].State
+	}
+
+	return sum
+}
+
+func SetNeighbors(grid [][]*Cell, x, y, width, height int) {
+	idx := 0
+	for nbgX := -1; nbgX < 2; nbgX++ {
+		for nbgY := -1; nbgY < 2; nbgY++ {
+			var col, row int
+
+			if x+nbgX < 0 || x+nbgX >= width || y+nbgY < 0 || y+nbgY >= height {
+				continue
+			}
+
+			col = x + nbgX
+			row = y + nbgY
+
+			if col == x && row == y {
+				continue
+			}
+
+			grid[y][x].Neighbors[idx] = grid[row][col]
+			grid[y][x].NeighborCount++
+			idx++
+		}
+	}
+}
+
 type Grid struct {
-	Data                   [][]int64
+	Data                   [][]*Cell
 	Width, Height, Density int
 }
 
@@ -27,11 +72,24 @@ func NewGrid(width, height, density int) *Grid {
 		Height:  height,
 		Width:   width,
 		Density: density,
-		Data:    make([][]int64, height),
+		Data:    make([][]*Cell, height),
 	}
 
 	for y := 0; y < height; y++ {
-		grid.Data[y] = make([]int64, width)
+		grid.Data[y] = make([]*Cell, width)
+		for x := 0; x < width; x++ {
+			grid.Data[y][x] = &Cell{}
+
+			if rand.Intn(density) == 1 {
+				grid.Data[y][x].State = 1
+			}
+		}
+	}
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			SetNeighbors(grid.Data, x, y, width, height)
+		}
 	}
 
 	return grid
@@ -62,7 +120,7 @@ func (game *Game) DebugDump() {
 	if game.Debug {
 		for y := 0; y < game.Height; y++ {
 			for x := 0; x < game.Width; x++ {
-				if game.Grids[game.Index].Data[y][x] == 1 {
+				if game.Grids[game.Index].Data[y][x].State == 1 {
 					fmt.Print("XX")
 				} else {
 					fmt.Print("  ")
@@ -79,15 +137,6 @@ func (game *Game) Init() {
 	grida := NewGrid(game.Width, game.Height, game.Density)
 	gridb := NewGrid(game.Width, game.Height, game.Density)
 
-	for y := 0; y < game.Height; y++ {
-		for x := 0; x < game.Width; x++ {
-			if rand.Intn(game.Density) == 1 {
-				grida.Data[y][x] = 1
-			}
-		}
-
-	}
-
 	game.Grids = []*Grid{
 		grida,
 		gridb,
@@ -99,35 +148,15 @@ func (game *Game) Init() {
 }
 
 // count the living neighbors of a cell
-func (game *Game) CountNeighbors(x, y int) int64 {
-	var sum int64
-
-	for nbgX := -1; nbgX < 2; nbgX++ {
-		for nbgY := -1; nbgY < 2; nbgY++ {
-			var col, row int
-
-			// Wrap  mode we look  at all the 8  neighbors surrounding
-			//  us.  In  case we  are  on an  edge we'll  look at  the
-			// neighbor on  the other side of the  grid, thus wrapping
-			// lookahead around using the mod() function.
-			col = (x + nbgX + game.Width) % game.Width
-			row = (y + nbgY + game.Height) % game.Height
-
-			sum += game.Grids[game.Index].Data[row][col]
-		}
-	}
-
-	// don't count ourselfes though
-	sum -= game.Grids[game.Index].Data[y][x]
-
-	return sum
+func (game *Game) CountNeighbors(x, y int) uint8 {
+	return game.Grids[game.Index].Data[y][x].Count(x, y)
 }
 
 // the heart of the game
-func (game *Game) CheckRule(state int64, neighbors int64) int64 {
-	var nextstate int64
+func (game *Game) CheckRule(state uint8, neighbors uint8) uint8 {
+	var nextstate uint8
 
-	if state == 0 && neighbors == 3 {
+	if state == 1 && neighbors == 3 {
 		nextstate = 1
 	} else if state == 1 && (neighbors == 2 || neighbors == 3) {
 		nextstate = 1
@@ -156,14 +185,14 @@ func (game *Game) UpdateCells() {
 	// calculate cell life state, this is the actual game of life
 	for y := 0; y < game.Height; y++ {
 		for x := 0; x < game.Width; x++ {
-			state := game.Grids[game.Index].Data[y][x] // 0|1 == dead or alive
-			neighbors := game.CountNeighbors(x, y)     // alive neighbor count
+			state := game.Grids[game.Index].Data[y][x].State
+			neighbors := game.CountNeighbors(x, y)
 
 			// actually apply the current rules
 			nextstate := game.CheckRule(state, neighbors)
 
 			// change state of current cell in next grid
-			game.Grids[next].Data[y][x] = nextstate
+			game.Grids[next].Data[y][x].State = nextstate
 		}
 	}
 
@@ -208,7 +237,7 @@ func (game *Game) UpdatePixels() {
 			gridy = y / game.Cellsize
 
 			col = 0xff
-			if game.Grids[game.Index].Data[gridy][gridx] == 1 {
+			if game.Grids[game.Index].Data[gridy][gridx].State == 1 {
 				col = 0x0
 			}
 
