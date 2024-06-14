@@ -20,7 +20,11 @@ https://www.tasnimzotder.com/blog/optimizing-game-of-life-algorithm
   the cells anymore.
 - Speed
   https://conwaylife.com/forums/viewtopic.php?f=7&t=3237
-  
+  Look at try-pointers-and-cells branch, we're using pre-calculated
+  neighbor list of pointers to cells, but it's only a liiiiitle bit
+  better :(
+
+
 - Patterns:
 
 A   Catagolue   textcensus   of,  say,   period-2   oscillators   from
