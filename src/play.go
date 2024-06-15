@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"sync"
 	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -21,6 +22,21 @@ const (
 	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02f, Zoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s"
 )
 
+type History struct {
+	Age [][]int64
+}
+
+func NewHistory(height, width int) History {
+	hist := History{}
+
+	hist.Age = make([][]int64, height)
+	for y := 0; y < height; y++ {
+		hist.Age[y] = make([]int64, width)
+	}
+
+	return hist
+}
+
 type ScenePlay struct {
 	Game   *Game
 	Config *Config
@@ -31,7 +47,7 @@ type ScenePlay struct {
 	Clear bool
 
 	Grids         []*Grid       // 2 grids: one current, one next
-	History       [][]int64     // holds state of past dead cells for evolution traces
+	History       History       // holds state of past dead cells for evolution traces
 	Index         int           // points to current grid
 	Generations   int64         // Stats
 	TicksElapsed  int           // tick counter for game speed
@@ -116,29 +132,39 @@ func (scene *ScenePlay) UpdateCells() {
 	// next grid index, we just xor 0|1 to 1|0
 	next := scene.Index ^ 1
 
+	var wg sync.WaitGroup
+	wg.Add(scene.Config.Height)
+
 	// compute life status of cells
 	for y := 0; y < scene.Config.Height; y++ {
-		for x := 0; x < scene.Config.Width; x++ {
-			state := scene.Grids[scene.Index].Data[y][x].State // 0|1 == dead or alive
-			neighbors := scene.Grids[scene.Index].CountNeighbors(x, y)
 
-			// actually apply the current rules
-			nextstate := scene.CheckRule(state, neighbors)
+		go func() {
+			defer wg.Done()
 
-			// change state of current cell in next grid
-			scene.Grids[next].Data[y][x].State = nextstate
+			for x := 0; x < scene.Config.Width; x++ {
+				state := scene.Grids[scene.Index].Data[y][x].State // 0|1 == dead or alive
+				neighbors := scene.Grids[scene.Index].CountNeighbors(x, y)
 
-			if scene.Config.ShowEvolution {
-				// set history  to current generation so we  can infer the
-				// age of the cell's state  during rendering and use it to
-				// deduce the color to use if evolution tracing is enabled
-				// 60FPS:
-				if state != nextstate {
-					scene.History[y][x] = scene.Generations
+				// actually apply the current rules
+				nextstate := scene.CheckRule(state, neighbors)
+
+				// change state of current cell in next grid
+				scene.Grids[next].Data[y][x].State = nextstate
+
+				if scene.Config.ShowEvolution {
+					// set history  to current generation so we  can infer the
+					// age of the cell's state  during rendering and use it to
+					// deduce the color to use if evolution tracing is enabled
+					// 60FPS:
+					if state != nextstate {
+						scene.History.Age[y][x] = scene.Generations
+					}
 				}
 			}
-		}
+		}()
 	}
+
+	wg.Wait()
 
 	// switch grid for rendering
 	scene.Index ^= 1
@@ -427,7 +453,7 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive bool) {
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
 		scene.Grids[scene.Index].Data[y][x].State = alive
-		scene.History[y][x] = 1
+		scene.History.Age[y][x] = 1
 	}
 }
 
@@ -467,7 +493,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 }
 
 func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
-	age := scene.Generations - scene.History[y][x]
+	age := scene.Generations - scene.History.Age[y][x]
 
 	switch scene.Grids[scene.Index].Data[y][x].State {
 	case Alive:
@@ -478,7 +504,7 @@ func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten
 		}
 	case Dead:
 		// only draw dead cells in case evolution trace is enabled
-		if scene.History[y][x] > 1 && scene.Config.ShowEvolution {
+		if age > 1 && scene.Config.ShowEvolution {
 			switch {
 			case age < 10:
 				scene.World.DrawImage(scene.Theme.Tile(ColAge1), op)
@@ -588,10 +614,7 @@ func (scene *ScenePlay) InitGrid() {
 		gridb,
 	}
 
-	scene.History = make([][]int64, scene.Config.Height)
-	for y := 0; y < scene.Config.Height; y++ {
-		scene.History[y] = make([]int64, scene.Config.Width)
-	}
+	scene.History = NewHistory(scene.Config.Height, scene.Config.Width)
 }
 
 func (scene *ScenePlay) Init() {
