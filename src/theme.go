@@ -25,9 +25,11 @@ const (
 // the  colors and  the  actual tile  images here,  so  that they  are
 // readily available from play.go
 type Theme struct {
-	Tiles  map[int]*ebiten.Image
-	Colors map[int]color.RGBA
-	Name   string
+	Tiles     map[int]*ebiten.Image
+	GridTiles map[int]*ebiten.Image
+	Colors    map[int]color.RGBA
+	Name      string
+	ShowGrid  bool
 }
 
 type ThemeDef struct {
@@ -84,10 +86,14 @@ func NewTheme(def ThemeDef, cellsize int, name string) Theme {
 	}
 
 	theme.Tiles = make(map[int]*ebiten.Image, 6)
+	theme.GridTiles = make(map[int]*ebiten.Image, 6)
 
 	for cid, col := range theme.Colors {
 		theme.Tiles[cid] = ebiten.NewImage(cellsize, cellsize)
-		FillCell(theme.Tiles[cid], cellsize, col)
+		FillCell(theme.Tiles[cid], cellsize, col, 0)
+
+		theme.GridTiles[cid] = ebiten.NewImage(cellsize, cellsize)
+		FillCell(theme.GridTiles[cid], cellsize, col, 1)
 	}
 
 	return theme
@@ -97,11 +103,19 @@ func NewTheme(def ThemeDef, cellsize int, name string) Theme {
 // unknown type is being used, which is ok, since the code is the only
 // user anyway
 func (theme *Theme) Tile(col int) *ebiten.Image {
+	if theme.ShowGrid {
+		return theme.GridTiles[col]
+	}
+
 	return theme.Tiles[col]
 }
 
 func (theme *Theme) Color(col int) color.RGBA {
 	return theme.Colors[col]
+}
+
+func (theme *Theme) SetGrid(showgrid bool) {
+	theme.ShowGrid = showgrid
 }
 
 type ThemeManager struct {
@@ -152,11 +166,11 @@ func (manager *ThemeManager) SetCurrentTheme(theme string) {
 //
 // So we don't draw a grid, we just left a grid behind, which saves us
 // from a lot of drawing operations.
-func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
+func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA, x int) {
 	vector.DrawFilledRect(
 		tile,
-		float32(0),
-		float32(0),
+		float32(x),
+		float32(x),
 		float32(cellsize),
 		float32(cellsize),
 		col, false,

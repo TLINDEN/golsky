@@ -46,23 +46,23 @@ type ScenePlay struct {
 
 	Clear bool
 
-	Grids                   []*Grid       // 2 grids: one current, one next
-	History                 History       // holds state of past dead cells for evolution traces
-	Index                   int           // points to current grid
-	Generations             int64         // Stats
-	TicksElapsed            int           // tick counter for game speed
-	Camera                  Camera        // for zoom+move
-	World, Cache, GridImage *ebiten.Image // actual image we render to
-	WheelTurned             bool          // when user turns wheel multiple times, zoom faster
-	Dragging                bool          // middle mouse is pressed, move canvas
-	LastCursorPos           []float64     // used to check if the user is dragging
-	MarkTaken               bool          // true when mouse1 pressed
-	MarkDone                bool          // true when mouse1 released, copy cells between Mark+Point
-	Mark, Point             image.Point   // area to marks+save
-	RunOneStep              bool          // mutable flags from config
-	TPG                     int           // current game speed (ticks per game)
-	Theme                   Theme
-	RuleCheckFunc           func(uint8, uint8) uint8
+	Grids         []*Grid       // 2 grids: one current, one next
+	History       History       // holds state of past dead cells for evolution traces
+	Index         int           // points to current grid
+	Generations   int64         // Stats
+	TicksElapsed  int           // tick counter for game speed
+	Camera        Camera        // for zoom+move
+	World, Cache  *ebiten.Image // actual image we render to
+	WheelTurned   bool          // when user turns wheel multiple times, zoom faster
+	Dragging      bool          // middle mouse is pressed, move canvas
+	LastCursorPos []float64     // used to check if the user is dragging
+	MarkTaken     bool          // true when mouse1 pressed
+	MarkDone      bool          // true when mouse1 released, copy cells between Mark+Point
+	Mark, Point   image.Point   // area to marks+save
+	RunOneStep    bool          // mutable flags from config
+	TPG           int           // current game speed (ticks per game)
+	Theme         Theme
+	RuleCheckFunc func(uint8, uint8) uint8
 }
 
 func NewPlayScene(game *Game, config *Config) Scene {
@@ -505,13 +505,6 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	if scene.Config.ShowGrid {
-		// draw the pre-drawn grid onto the world
-		op.GeoM.Reset()
-		op.GeoM.Translate(0, 0)
-		scene.World.DrawImage(scene.GridImage, op)
-	}
-
 	scene.DrawMark(scene.World)
 
 	scene.Camera.Render(scene.World, screen)
@@ -610,22 +603,19 @@ func (scene *ScenePlay) InitPattern() {
 
 // pre-render offscreen cache image
 func (scene *ScenePlay) InitCache() {
-	op := &ebiten.DrawImageOptions{}
+	// setup theme
+	scene.Theme.SetGrid(scene.Config.ShowGrid)
 
-	if scene.Config.ShowGrid {
-		scene.Cache.Fill(scene.Theme.Color(ColGrid))
-	} else {
+	if !scene.Config.ShowGrid {
 		scene.Cache.Fill(scene.Theme.Color(ColDead))
+		return
 	}
 
-	for y := 0; y < scene.Config.Height; y++ {
-		// horizontal grid line
-		vector.StrokeLine(scene.GridImage,
-			float32(0), float32(y*scene.Config.Cellsize),
-			float32(scene.Config.Width*scene.Config.Cellsize), float32(y*scene.Config.Cellsize),
-			1, scene.Theme.Color(ColGrid), false,
-		)
+	op := &ebiten.DrawImageOptions{}
 
+	scene.Cache.Fill(scene.Theme.Color(ColGrid))
+
+	for y := 0; y < scene.Config.Height; y++ {
 		for x := 0; x < scene.Config.Width; x++ {
 			op.GeoM.Reset()
 			op.GeoM.Translate(
@@ -634,13 +624,6 @@ func (scene *ScenePlay) InitCache() {
 			)
 
 			scene.Cache.DrawImage(scene.Theme.Tile(ColDead), op)
-
-			// vertical grid line
-			vector.StrokeLine(scene.GridImage,
-				float32(x*scene.Config.Cellsize), float32(0),
-				float32(x*scene.Config.Cellsize), float32(scene.Config.Height*scene.Config.Cellsize),
-				1, scene.Theme.Color(ColGrid), false,
-			)
 		}
 	}
 }
@@ -683,11 +666,6 @@ func (scene *ScenePlay) Init() {
 	)
 
 	scene.Cache = ebiten.NewImage(
-		scene.Config.Width*scene.Config.Cellsize,
-		scene.Config.Height*scene.Config.Cellsize,
-	)
-
-	scene.GridImage = ebiten.NewImage(
 		scene.Config.Width*scene.Config.Cellsize,
 		scene.Config.Height*scene.Config.Cellsize,
 	)
