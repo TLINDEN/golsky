@@ -155,8 +155,8 @@ func (manager *ThemeManager) SetCurrentTheme(theme string) {
 func FillCell(tile *ebiten.Image, cellsize int, col color.RGBA) {
 	vector.DrawFilledRect(
 		tile,
-		float32(1),
-		float32(1),
+		float32(0),
+		float32(0),
 		float32(cellsize),
 		float32(cellsize),
 		col, false,
