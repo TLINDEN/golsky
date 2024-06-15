@@ -62,6 +62,7 @@ type ScenePlay struct {
 	RunOneStep              bool          // mutable flags from config
 	TPG                     int           // current game speed (ticks per game)
 	Theme                   Theme
+	RuleCheckFunc           func(uint8, uint8) uint8
 }
 
 func NewPlayScene(game *Game, config *Config) Scene {
@@ -99,7 +100,26 @@ func (scene *ScenePlay) SetNext(next SceneName) {
 	scene.Next = next
 }
 
-func (scene *ScenePlay) CheckRule(state uint8, neighbors uint8) uint8 {
+func (scene *ScenePlay) CheckRuleB3S23(state uint8, neighbors uint8) uint8 {
+	var nextstate uint8
+
+	check := (9 * state) + neighbors
+
+	switch check {
+	case 11:
+		fallthrough
+	case 12:
+		fallthrough
+	case 3:
+		nextstate = Alive
+	default:
+		nextstate = Dead
+	}
+
+	return nextstate
+}
+
+func (scene *ScenePlay) CheckRuleGeneric(state uint8, neighbors uint8) uint8 {
 	var nextstate uint8
 
 	// The standard Scene of Life is symbolized in rule-string notation
@@ -146,7 +166,7 @@ func (scene *ScenePlay) UpdateCells() {
 				neighbors := scene.Grids[scene.Index].CountNeighbors(x, y)
 
 				// actually apply the current rules
-				nextstate := scene.CheckRule(state, neighbors)
+				nextstate := scene.RuleCheckFunc(state, neighbors)
 
 				// change state of current cell in next grid
 				scene.Grids[next].Data[y][x].State = nextstate
@@ -583,6 +603,9 @@ func (scene *ScenePlay) DrawDebug(screen *ebiten.Image) {
 // load a pre-computed pattern from RLE file
 func (scene *ScenePlay) InitPattern() {
 	scene.Grids[0].LoadRLE(scene.Config.RLE)
+
+	// rule might have changed
+	scene.InitRuleCheckFunc()
 }
 
 // pre-render offscreen cache image
@@ -698,4 +721,12 @@ func (scene *ScenePlay) Init() {
 
 func bool2int(b bool) int {
 	return int(*(*byte)(unsafe.Pointer(&b)))
+}
+
+func (scene *ScenePlay) InitRuleCheckFunc() {
+	if scene.Config.Rule.Definition == "B3/S23" {
+		scene.RuleCheckFunc = scene.CheckRuleB3S23
+	} else {
+		scene.RuleCheckFunc = scene.CheckRuleGeneric
+	}
 }
