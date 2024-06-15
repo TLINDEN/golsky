@@ -22,21 +22,6 @@ const (
 	DEBUG_FORMAT = "FPS: %0.2f, TPG: %d, M: %0.2fMB, Generations: %d\nScale: %.02f, Zoom: %d, Cam: %.02f,%.02f Cursor: %d,%d  %s"
 )
 
-type History struct {
-	Age [][]int64
-}
-
-func NewHistory(height, width int) History {
-	hist := History{}
-
-	hist.Age = make([][]int64, height)
-	for y := 0; y < height; y++ {
-		hist.Age[y] = make([]int64, width)
-	}
-
-	return hist
-}
-
 type ScenePlay struct {
 	Game   *Game
 	Config *Config
@@ -47,7 +32,7 @@ type ScenePlay struct {
 	Clear bool
 
 	Grids         []*Grid       // 2 grids: one current, one next
-	History       History       // holds state of past dead cells for evolution traces
+	History       [][]int64     // holds state of past dead cells for evolution traces
 	Index         int           // points to current grid
 	Generations   int64         // Stats
 	TicksElapsed  int           // tick counter for game speed
@@ -157,7 +142,7 @@ func (scene *ScenePlay) UpdateCells() {
 					// deduce the color to use if evolution tracing is enabled
 					// 60FPS:
 					if state != nextstate {
-						scene.History.Age[y][x] = scene.Generations
+						scene.History[y][x] = scene.Generations
 					}
 				}
 			}
@@ -453,7 +438,7 @@ func (scene *ScenePlay) ToggleCellOnCursorPos(alive uint8) {
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
 		scene.Grids[scene.Index].Data[y][x].State = alive
-		scene.History.Age[y][x] = 1
+		scene.History[y][x] = 1
 	}
 }
 
@@ -493,7 +478,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 }
 
 func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
-	age := scene.Generations - scene.History.Age[y][x]
+	age := scene.Generations - scene.History[y][x]
 
 	switch scene.Grids[scene.Index].Data[y][x].State {
 	case Alive:
@@ -614,7 +599,10 @@ func (scene *ScenePlay) InitGrid() {
 		gridb,
 	}
 
-	scene.History = NewHistory(scene.Config.Height, scene.Config.Width)
+	scene.History = make([][]int64, scene.Config.Height)
+	for y := 0; y < scene.Config.Height; y++ {
+		scene.History[y] = make([]int64, scene.Config.Width)
+	}
 }
 
 func (scene *ScenePlay) Init() {
