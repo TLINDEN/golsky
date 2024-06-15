@@ -99,8 +99,8 @@ func (scene *ScenePlay) SetNext(next SceneName) {
 	scene.Next = next
 }
 
-func (scene *ScenePlay) CheckRule(state bool, neighbors int) bool {
-	var nextstate bool
+func (scene *ScenePlay) CheckRule(state uint8, neighbors uint8) uint8 {
+	var nextstate uint8
 
 	// The standard Scene of Life is symbolized in rule-string notation
 	// as B3/S23 (23/3 here).  A cell  is born if it has exactly three
@@ -108,9 +108,9 @@ func (scene *ScenePlay) CheckRule(state bool, neighbors int) bool {
 	// and  dies otherwise. The first  number, or list of  numbers, is
 	// what is required for a dead cell to be born.
 
-	if !state && Contains(scene.Config.Rule.Birth, neighbors) {
+	if state != 1 && Contains(scene.Config.Rule.Birth, neighbors) {
 		nextstate = Alive
-	} else if state && Contains(scene.Config.Rule.Death, neighbors) {
+	} else if state == 1 && Contains(scene.Config.Rule.Death, neighbors) {
 		nextstate = Alive
 	} else {
 		nextstate = Dead
@@ -393,10 +393,10 @@ func (scene *ScenePlay) SaveRectRLE() {
 		height = scene.Mark.Y - scene.Point.Y
 	}
 
-	grid := make([][]bool, height)
+	grid := make([][]uint8, height)
 
 	for y := 0; y < height; y++ {
-		grid[y] = make([]bool, width)
+		grid[y] = make([]uint8, width)
 
 		for x := 0; x < width; x++ {
 			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx].State
@@ -445,7 +445,7 @@ func (scene *ScenePlay) Update() error {
 }
 
 // set a cell to alive or dead
-func (scene *ScenePlay) ToggleCellOnCursorPos(alive bool) {
+func (scene *ScenePlay) ToggleCellOnCursorPos(alive uint8) {
 	// use cursor pos relative to the world
 	worldX, worldY := scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	x := int(worldX) / scene.Config.Cellsize
@@ -478,7 +478,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			if scene.Config.ShowEvolution {
 				scene.DrawEvolution(screen, x, y, op)
 			} else {
-				if scene.Grids[scene.Index].Data[y][x].State {
+				if scene.Grids[scene.Index].Data[y][x].State == 1 {
 					scene.World.DrawImage(scene.Theme.Tile(ColLife), op)
 				}
 			}

@@ -9,13 +9,13 @@ import (
 // a GOL rule
 type Rule struct {
 	Definition string
-	Birth      []int
-	Death      []int
+	Birth      []uint8
+	Death      []uint8
 }
 
 // parse one part of a GOL rule into rule slice
-func NumbersToList(numbers string) []int {
-	list := []int{}
+func NumbersToList(numbers string) []uint8 {
+	list := []uint8{}
 
 	items := strings.Split(numbers, "")
 	for _, item := range items {
@@ -24,7 +24,7 @@ func NumbersToList(numbers string) []int {
 			log.Fatalf("failed to parse game rule part <%s>: %s", numbers, err)
 		}
 
-		list = append(list, num)
+		list = append(list, uint8(num))
 	}
 
 	return list

@@ -13,16 +13,16 @@ import (
 )
 
 type Cell struct {
-	State         bool
+	State         uint8
 	Neighbors     [8]*Cell
 	NeighborCount int
 }
 
-func (cell *Cell) Count() int {
-	count := 0
+func (cell *Cell) Count() uint8 {
+	var count uint8
 
 	for idx := 0; idx < cell.NeighborCount; idx++ {
-		count += bool2int(cell.Neighbors[idx].State)
+		count += cell.Neighbors[idx].State
 	}
 
 	return count
@@ -97,7 +97,7 @@ func (grid *Grid) SetupNeighbors(x, y int) {
 }
 
 // count the living neighbors of a cell
-func (grid *Grid) CountNeighbors(x, y int) int {
+func (grid *Grid) CountNeighbors(x, y int) uint8 {
 	return grid.Data[y][x].Count()
 }
 
@@ -124,7 +124,7 @@ func (grid *Grid) Copy(other *Grid) {
 func (grid *Grid) Clear() {
 	for y := range grid.Data {
 		for x := range grid.Data[y] {
-			grid.Data[y][x].State = false
+			grid.Data[y][x].State = 0
 		}
 	}
 }
@@ -135,7 +135,7 @@ func (grid *Grid) FillRandom() {
 		for y := range grid.Data {
 			for x := range grid.Data[y] {
 				if rand.Intn(grid.Config.Density) == 1 {
-					grid.Data[y][x].State = true
+					grid.Data[y][x].State = 1
 				}
 			}
 		}
@@ -145,7 +145,7 @@ func (grid *Grid) FillRandom() {
 func (grid *Grid) Dump() {
 	for y := 0; y < grid.Config.Height; y++ {
 		for x := 0; x < grid.Config.Width; x++ {
-			if grid.Data[y][x].State {
+			if grid.Data[y][x].State == 1 {
 				fmt.Print("XX")
 			} else {
 				fmt.Print("  ")
@@ -168,7 +168,7 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 					x = colIndex + startX
 					y = rowIndex + startY
 
-					grid.Data[y][x].State = true
+					grid.Data[y][x].State = 1
 				}
 			}
 		}
@@ -279,7 +279,7 @@ func (grid *Grid) SaveState(filename, rule string) error {
 	for y := range grid.Data {
 		for _, cell := range grid.Data[y] {
 			row := "."
-			if cell.State {
+			if cell.State == 1 {
 				row = "o"
 			}
 

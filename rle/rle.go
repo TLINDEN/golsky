@@ -120,7 +120,7 @@ func removeWhitespace(input string) string {
 }
 
 // Store a grid to an RLE file
-func StoreGridToRLE(grid [][]bool, filename, rule string, width, height int) error {
+func StoreGridToRLE(grid [][]uint8, filename, rule string, width, height int) error {
 	fd, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func StoreGridToRLE(grid [][]bool, filename, rule string, width, height int) err
 		line := ""
 		for x := 0; x < width; x++ {
 			char := "b"
-			if grid[y][x] {
+			if grid[y][x] == 1 {
 				char = "o"
 			}
 
