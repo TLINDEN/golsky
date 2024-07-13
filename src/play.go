@@ -100,33 +100,34 @@ func (scene *ScenePlay) SetNext(next SceneName) {
 	scene.Next = next
 }
 
+/* The standard Scene of Life is symbolized in rule-string notation
+ * as B3/S23 (23/3 here).  A cell  is born if it has exactly three
+ * neighbors,  survives if it  has two or three  living neighbors,
+ * and  dies otherwise.
+ * we  abbreviate the calculation: if  state is 0 and  3 neighbors
+ * are a life, check will be just  3. If the cell is alive, 9 will
+ * be added  to the life neighbors (to avoid  a collision with the
+ * result 3), which will be 11|12 in case of 2|3 life neighbors.
+ */
 func (scene *ScenePlay) CheckRuleB3S23(state uint8, neighbors uint8) uint8 {
-	var nextstate uint8
-
-	check := (9 * state) + neighbors
-
-	switch check {
+	switch (9 * state) + neighbors {
 	case 11:
 		fallthrough
 	case 12:
 		fallthrough
 	case 3:
-		nextstate = Alive
-	default:
-		nextstate = Dead
+		return Alive
 	}
 
-	return nextstate
+	return Dead
 }
 
+/*
+ * The generic  rule checker is able  to calculate cell state  for any
+ * GOL rul, including B3/S23.
+ */
 func (scene *ScenePlay) CheckRuleGeneric(state uint8, neighbors uint8) uint8 {
 	var nextstate uint8
-
-	// The standard Scene of Life is symbolized in rule-string notation
-	// as B3/S23 (23/3 here).  A cell  is born if it has exactly three
-	// neighbors,  survives if it  has two or three  living neighbors,
-	// and  dies otherwise. The first  number, or list of  numbers, is
-	// what is required for a dead cell to be born.
 
 	if state != 1 && Contains(scene.Config.Rule.Birth, neighbors) {
 		nextstate = Alive

@@ -13,9 +13,9 @@ import (
 )
 
 type Cell struct {
-	State         uint8
-	Neighbors     [8]*Cell
-	NeighborCount int
+	State         uint8    // 1==life, 0==dead
+	Neighbors     [8]*Cell // all neighbors, max 8
+	NeighborCount int      // number of neighbors, might be less than 8 on edges
 }
 
 func (cell *Cell) Count() uint8 {
