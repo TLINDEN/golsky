@@ -264,10 +264,8 @@ func (scene *ScenePlay) CheckInput() {
 func (scene *ScenePlay) CheckDrawingInput() {
 	if scene.Config.Drawmode {
 		switch {
-		case ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft):
-			scene.ToggleCellOnCursorPos(Alive)
-		case ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight):
-			scene.ToggleCellOnCursorPos(Dead)
+		case inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft):
+			scene.ToggleCellOnCursorPos()
 		case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
 			scene.Config.Drawmode = false
 		}
@@ -465,14 +463,14 @@ func (scene *ScenePlay) Update() error {
 }
 
 // set a cell to alive or dead
-func (scene *ScenePlay) ToggleCellOnCursorPos(alive uint8) {
+func (scene *ScenePlay) ToggleCellOnCursorPos() {
 	// use cursor pos relative to the world
 	worldX, worldY := scene.Camera.ScreenToWorld(ebiten.CursorPosition())
 	x := int(worldX) / scene.Config.Cellsize
 	y := int(worldY) / scene.Config.Cellsize
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
-		scene.Grids[scene.Index].Data[y][x].State = alive
+		scene.Grids[scene.Index].Data[y][x].State ^= 1
 		scene.History.Age[y][x] = 1
 	}
 }

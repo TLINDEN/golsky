@@ -82,17 +82,16 @@ Usage of ./golsky:
 
 While it runs, there are a couple of commands you can use:
 
-* left mouse click: set a cell to alife (also pauses the game)
-* right mouse click: set a cell to dead
+
 * space: pause or resume the game
 * while game is paused: press n to forward one step
 * page up: speed up
 * page down: slow down
 * Mouse wheel: zoom in or out
 * move mouse while left mouse button pressed: move canvas
-* i: enter "insert" (draw) mode: use left mouse to set cells alife and right
-  button to dead. Leave with "space". While in insert mode, use middle mouse
-  button to drag grid.
+* i: enter "insert" (draw) mode: use left mouse to toggle cells alife state.
+  Leave with insert mode "space". While in insert mode, use middle mouse
+  button to drag the grid.
 * r: reset to 1:1 zoom
 * escape: open menu
 * s: save game state to file (can be loaded with -l)

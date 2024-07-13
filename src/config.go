@@ -52,7 +52,7 @@ const (
 	DEFAULT_CELLSIZE    = 4
 	DEFAULT_ZOOMFACTOR  = 400
 	DEFAULT_GEOM        = "640x384"
-	DEFAULT_THEME       = "standard" // "light" // inverse => "dark"
+	DEFAULT_THEME       = "standard"
 )
 
 const KEYBINDINGS string = `
@@ -62,9 +62,9 @@ const KEYBINDINGS string = `
 - PAGE DOWN: slow down
 - MOUSE WHEEL: zoom in or out
 - LEFT MOUSE BUTTON: use to drag canvas, keep clicked and move mouse
-- I: enter "insert" (draw) mode: use left mouse to set cells alife and right
-     button to dead. Leave with "space". While in insert mode, use middle mouse
-     button to drag grid.
+- I: enter "insert" (draw) mode: use left mouse to toggle a cells alife state.
+     Leave with insert mode with "space". While in insert mode, use middle mouse
+     button to drag the grid.
 - R: reset to 1:1 zoom
 - ESCAPE: open menu, o: open options menu
 - S: save game state to file (can be loaded with -l)
