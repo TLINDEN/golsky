@@ -12,45 +12,50 @@ import (
 	"github.com/tlinden/golsky/rle"
 )
 
-type Cell struct {
-	State         uint8    // 1==life, 0==dead
-	Neighbors     [8]*Cell // all neighbors, max 8
-	NeighborCount int      // number of neighbors, might be less than 8 on edges
-}
+// func (cell *Cell) Count() uint8 {
+// 	var count uint8
 
-func (cell *Cell) Count() uint8 {
-	var count uint8
+// 	for idx := 0; idx < cell.NeighborCount; idx++ {
+// 		count += cell.Neighbors[idx].State
+// 	}
 
-	for idx := 0; idx < cell.NeighborCount; idx++ {
-		count += cell.Neighbors[idx].State
-	}
+// 	return count
+// }
 
-	return count
+type Neighbor struct {
+	X, Y int
 }
 
 type Grid struct {
-	Data   [][]*Cell
-	Empty  bool
-	Config *Config
+	Data          [][]uint8
+	NeighborCount [][]int
+	Neighbors     [][][]Neighbor
+	Empty         bool
+	Config        *Config
 }
 
 // Create new empty grid and allocate Data according to provided dimensions
 func NewGrid(config *Config) *Grid {
 	grid := &Grid{
-		Data:   make([][]*Cell, config.Height),
-		Empty:  config.Empty,
-		Config: config,
+		Data:          make([][]uint8, config.Height),
+		NeighborCount: make([][]int, config.Height),
+		Neighbors:     make([][][]Neighbor, config.Height),
+		Empty:         config.Empty,
+		Config:        config,
 	}
 
 	// first setup the cells
 	for y := 0; y < config.Height; y++ {
-		grid.Data[y] = make([]*Cell, config.Width)
+		grid.Data[y] = make([]uint8, config.Width)
+		grid.Neighbors[y] = make([][]Neighbor, config.Width)
+		grid.NeighborCount[y] = make([]int, config.Width)
+
 		for x := 0; x < config.Width; x++ {
-			grid.Data[y][x] = &Cell{}
+			grid.Data[y][x] = 0
 		}
 	}
 
-	// in a second pass, collect pointers to the neighbors of each cell
+	// in a second pass, collect positions to the neighbors of each cell
 	for y := 0; y < config.Height; y++ {
 		for x := 0; x < config.Width; x++ {
 			grid.SetupNeighbors(x, y)
@@ -62,6 +67,8 @@ func NewGrid(config *Config) *Grid {
 
 func (grid *Grid) SetupNeighbors(x, y int) {
 	idx := 0
+
+	var neighbors []Neighbor
 
 	for nbgY := -1; nbgY < 2; nbgY++ {
 		for nbgX := -1; nbgX < 2; nbgX++ {
@@ -89,16 +96,24 @@ func (grid *Grid) SetupNeighbors(x, y int) {
 				continue
 			}
 
-			grid.Data[y][x].Neighbors[idx] = grid.Data[row][col]
-			grid.Data[y][x].NeighborCount++
+			neighbors = append(neighbors, Neighbor{X: col, Y: row})
+			grid.NeighborCount[y][x]++
 			idx++
 		}
 	}
+
+	grid.Neighbors[y][x] = neighbors
 }
 
 // count the living neighbors of a cell
 func (grid *Grid) CountNeighbors(x, y int) uint8 {
-	return grid.Data[y][x].Count()
+	var count uint8
+
+	for idx := 0; idx < grid.NeighborCount[y][x]; idx++ {
+		count += grid.Data[grid.Neighbors[y][x][idx].Y][grid.Neighbors[y][x][idx].X]
+	}
+
+	return count
 }
 
 // Create a new 1:1 instance
@@ -124,7 +139,7 @@ func (grid *Grid) Copy(other *Grid) {
 func (grid *Grid) Clear() {
 	for y := range grid.Data {
 		for x := range grid.Data[y] {
-			grid.Data[y][x].State = 0
+			grid.Data[y][x] = 0
 		}
 	}
 }
@@ -135,7 +150,7 @@ func (grid *Grid) FillRandom() {
 		for y := range grid.Data {
 			for x := range grid.Data[y] {
 				if rand.Intn(grid.Config.Density) == 1 {
-					grid.Data[y][x].State = 1
+					grid.Data[y][x] = 1
 				}
 			}
 		}
@@ -145,7 +160,7 @@ func (grid *Grid) FillRandom() {
 func (grid *Grid) Dump() {
 	for y := 0; y < grid.Config.Height; y++ {
 		for x := 0; x < grid.Config.Width; x++ {
-			if grid.Data[y][x].State == 1 {
+			if grid.Data[y][x] == 1 {
 				fmt.Print("XX")
 			} else {
 				fmt.Print("  ")
@@ -168,7 +183,7 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 					x = colIndex + startX
 					y = rowIndex + startY
 
-					grid.Data[y][x].State = 1
+					grid.Data[y][x] = 1
 				}
 			}
 		}
@@ -279,7 +294,7 @@ func (grid *Grid) SaveState(filename, rule string) error {
 	for y := range grid.Data {
 		for _, cell := range grid.Data[y] {
 			row := "."
-			if cell.State == 1 {
+			if cell == 1 {
 				row = "o"
 			}
 
