@@ -167,7 +167,7 @@ func (scene *ScenePlay) UpdateCells() {
 
 			for x := 0; x < width; x++ {
 				state := scene.Grids[scene.Index].Data[y+STRIDE*x] // 0|1 == dead or alive
-				neighbors := scene.Grids[scene.Index].CountNeighbors(x, y)
+				neighbors := scene.Grids[scene.Index].Counter(x, y)
 
 				// actually apply the current rules
 				nextstate := scene.RuleCheckFunc(state, neighbors)

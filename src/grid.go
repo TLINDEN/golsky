@@ -25,6 +25,7 @@ type Grid struct {
 	Neighbors     [][]Neighbor
 	Empty         bool
 	Config        *Config
+	Counter       func(x, y int) uint8
 }
 
 // Create new empty grid and allocate Data according to provided dimensions
@@ -56,6 +57,12 @@ func NewGrid(config *Config) *Grid {
 		for x := 0; x < config.Width; x++ {
 			grid.SetupNeighbors(x, y)
 		}
+	}
+
+	if grid.Config.Wrap {
+		grid.Counter = grid.CountNeighborsWrap
+	} else {
+		grid.Counter = grid.CountNeighbors
 	}
 
 	return grid
@@ -101,8 +108,62 @@ func (grid *Grid) SetupNeighbors(x, y int) {
 	grid.Neighbors[y+STRIDE*x] = neighbors
 }
 
-// count the living neighbors of a cell
+func (grid *Grid) CountNeighborsWrap(x, y int) uint8 {
+	var sum uint8
+
+	for nbgX := -1; nbgX < 2; nbgX++ {
+		for nbgY := -1; nbgY < 2; nbgY++ {
+			var col, row int
+
+			// In wrap mode we look at all the 8 neighbors surrounding us.
+			// In case we are on an edge we'll look at the neighbor on the
+			//  other side  of the  grid, thus  wrapping lookahead  around
+			// using the mod() function.
+			col = (x + nbgX + grid.Config.Width) % grid.Config.Width
+			row = (y + nbgY + grid.Config.Height) % grid.Config.Height
+
+			sum += grid.Data[row+STRIDE*col]
+		}
+	}
+
+	// don't count ourselfes though
+	sum -= grid.Data[y+STRIDE*x]
+
+	return sum
+}
+
 func (grid *Grid) CountNeighbors(x, y int) uint8 {
+	var sum uint8
+
+	width := grid.Config.Width
+	height := grid.Config.Height
+
+	for nbgX := -1; nbgX < 2; nbgX++ {
+		for nbgY := -1; nbgY < 2; nbgY++ {
+			var col, row int
+
+			xnbgX := x + nbgX
+			ynbgY := y + nbgY
+
+			// In traditional grid mode the edges are deadly
+			if xnbgX < 0 || xnbgX >= width || ynbgY < 0 || ynbgY >= height {
+				continue
+			}
+			col = xnbgX
+			row = ynbgY
+
+			sum += grid.Data[row+STRIDE*col]
+		}
+	}
+
+	// don't count ourselfes though
+	sum -= grid.Data[y+STRIDE*x]
+
+	return sum
+}
+
+// count the living neighbors of a cell
+func (grid *Grid) _CountNeighbors(x, y int) uint8 {
 	var count uint8
 
 	pos := y + STRIDE*x
