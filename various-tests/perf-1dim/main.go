@@ -87,6 +87,17 @@ func Loop(grid []bool) {
 }
 
 func main() {
+	grid := make([]int, 50*50)
+
+	for y := 0; y < 50; y++ {
+		for x := 0; x < 50; x++ {
+			grid[y+50*x] = 1
+			fmt.Printf("%d,%d => %d\n", x, y, x+50*y)
+		}
+	}
+}
+
+func xmain() {
 	// enable  cpu profiling. Do  NOT use q  to stop the  game but
 	// close the window to get a profile
 	fd, err := os.Create("cpu.profile")

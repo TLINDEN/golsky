@@ -156,21 +156,24 @@ func (scene *ScenePlay) UpdateCells() {
 	var wg sync.WaitGroup
 	wg.Add(scene.Config.Height)
 
+	width := scene.Config.Width
+	height := scene.Config.Height
+
 	// compute life status of cells
-	for y := 0; y < scene.Config.Height; y++ {
+	for y := 0; y < height; y++ {
 
 		go func() {
 			defer wg.Done()
 
-			for x := 0; x < scene.Config.Width; x++ {
-				state := scene.Grids[scene.Index].Data[y][x] // 0|1 == dead or alive
+			for x := 0; x < width; x++ {
+				state := scene.Grids[scene.Index].Data[y+STRIDE*x] // 0|1 == dead or alive
 				neighbors := scene.Grids[scene.Index].CountNeighbors(x, y)
 
 				// actually apply the current rules
 				nextstate := scene.RuleCheckFunc(state, neighbors)
 
 				// change state of current cell in next grid
-				scene.Grids[next].Data[y][x] = nextstate
+				scene.Grids[next].Data[y+STRIDE*x] = nextstate
 
 				if scene.Config.ShowEvolution {
 					// set history  to current generation so we  can infer the
@@ -418,7 +421,7 @@ func (scene *ScenePlay) SaveRectRLE() {
 		grid[y] = make([]uint8, width)
 
 		for x := 0; x < width; x++ {
-			grid[y][x] = scene.Grids[scene.Index].Data[y+starty][x+startx]
+			grid[y][x] = scene.Grids[scene.Index].Data[(y+starty)+STRIDE*(x+startx)]
 		}
 	}
 
@@ -471,7 +474,7 @@ func (scene *ScenePlay) ToggleCellOnCursorPos() {
 	y := int(worldY) / scene.Config.Cellsize
 
 	if x > -1 && y > -1 && x < scene.Config.Width && y < scene.Config.Height {
-		scene.Grids[scene.Index].Data[y][x] ^= 1
+		scene.Grids[scene.Index].Data[y+STRIDE*x] ^= 1
 		scene.History.Age[y][x] = 1
 	}
 }
@@ -497,7 +500,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 			if scene.Config.ShowEvolution {
 				scene.DrawEvolution(screen, x, y, op)
 			} else {
-				if scene.Grids[scene.Index].Data[y][x] == 1 {
+				if scene.Grids[scene.Index].Data[y+STRIDE*x] == 1 {
 					scene.World.DrawImage(scene.Theme.Tile(ColLife), op)
 				}
 			}
@@ -514,7 +517,7 @@ func (scene *ScenePlay) Draw(screen *ebiten.Image) {
 func (scene *ScenePlay) DrawEvolution(screen *ebiten.Image, x, y int, op *ebiten.DrawImageOptions) {
 	age := scene.Generations - scene.History.Age[y][x]
 
-	switch scene.Grids[scene.Index].Data[y][x] {
+	switch scene.Grids[scene.Index].Data[y+STRIDE*x] {
 	case Alive:
 		if age > 50 && scene.Config.ShowEvolution {
 			scene.World.DrawImage(scene.Theme.Tile(ColOld), op)

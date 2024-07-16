@@ -12,46 +12,42 @@ import (
 	"github.com/tlinden/golsky/rle"
 )
 
-// func (cell *Cell) Count() uint8 {
-// 	var count uint8
-
-// 	for idx := 0; idx < cell.NeighborCount; idx++ {
-// 		count += cell.Neighbors[idx].State
-// 	}
-
-// 	return count
-// }
+// equals grid height, is being used to access grid elements and must be global
+var STRIDE int
 
 type Neighbor struct {
 	X, Y int
 }
 
 type Grid struct {
-	Data          [][]uint8
-	NeighborCount [][]int
-	Neighbors     [][][]Neighbor
+	Data          []uint8
+	NeighborCount []int
+	Neighbors     [][]Neighbor
 	Empty         bool
 	Config        *Config
 }
 
 // Create new empty grid and allocate Data according to provided dimensions
 func NewGrid(config *Config) *Grid {
+	STRIDE = config.Height
+	if config.Width > config.Height {
+		STRIDE = config.Width
+	}
+
+	size := STRIDE * STRIDE
+
 	grid := &Grid{
-		Data:          make([][]uint8, config.Height),
-		NeighborCount: make([][]int, config.Height),
-		Neighbors:     make([][][]Neighbor, config.Height),
+		Data:          make([]uint8, size),
+		NeighborCount: make([]int, size),
+		Neighbors:     make([][]Neighbor, size),
 		Empty:         config.Empty,
 		Config:        config,
 	}
 
 	// first setup the cells
 	for y := 0; y < config.Height; y++ {
-		grid.Data[y] = make([]uint8, config.Width)
-		grid.Neighbors[y] = make([][]Neighbor, config.Width)
-		grid.NeighborCount[y] = make([]int, config.Width)
-
 		for x := 0; x < config.Width; x++ {
-			grid.Data[y][x] = 0
+			grid.Data[y+STRIDE*x] = 0
 		}
 	}
 
@@ -97,20 +93,25 @@ func (grid *Grid) SetupNeighbors(x, y int) {
 			}
 
 			neighbors = append(neighbors, Neighbor{X: col, Y: row})
-			grid.NeighborCount[y][x]++
+			grid.NeighborCount[y+STRIDE*x]++
 			idx++
 		}
 	}
 
-	grid.Neighbors[y][x] = neighbors
+	grid.Neighbors[y+STRIDE*x] = neighbors
 }
 
 // count the living neighbors of a cell
 func (grid *Grid) CountNeighbors(x, y int) uint8 {
 	var count uint8
 
-	for idx := 0; idx < grid.NeighborCount[y][x]; idx++ {
-		count += grid.Data[grid.Neighbors[y][x][idx].Y][grid.Neighbors[y][x][idx].X]
+	pos := y + STRIDE*x
+	neighbors := grid.Neighbors[pos]
+	neighborCount := grid.NeighborCount[pos]
+
+	for idx := 0; idx < neighborCount; idx++ {
+		neighbor := neighbors[idx]
+		count += grid.Data[neighbor.Y+STRIDE*neighbor.X]
 	}
 
 	return count
@@ -127,30 +128,30 @@ func (grid *Grid) Clone() *Grid {
 }
 
 // copy data
-func (grid *Grid) Copy(other *Grid) {
-	for y := range grid.Data {
-		for x := range grid.Data[y] {
-			other.Data[y][x] = grid.Data[y][x]
-		}
-	}
-}
+// func (grid *Grid) Copy(other *Grid) {
+// 	for y := range grid.Data {
+// 		for x := range grid.Data[y] {
+// 			other.Data[y+STRIDE*x] = grid.Data[y+STRIDE*x]
+// 		}
+// 	}
+// }
 
 // delete all contents
-func (grid *Grid) Clear() {
-	for y := range grid.Data {
-		for x := range grid.Data[y] {
-			grid.Data[y][x] = 0
-		}
-	}
-}
+// func (grid *Grid) Clear() {
+// 	for y := range grid.Data {
+// 		for x := range grid.Data[y] {
+// 			grid.Data[y+STRIDE*x] = 0
+// 		}
+// 	}
+// }
 
 // initialize with random life cells using the given density
 func (grid *Grid) FillRandom() {
 	if !grid.Empty {
-		for y := range grid.Data {
-			for x := range grid.Data[y] {
+		for y := 0; y < grid.Config.Height; y++ {
+			for x := 0; x < grid.Config.Width; x++ {
 				if rand.Intn(grid.Config.Density) == 1 {
-					grid.Data[y][x] = 1
+					grid.Data[y+STRIDE*x] = 1
 				}
 			}
 		}
@@ -160,7 +161,7 @@ func (grid *Grid) FillRandom() {
 func (grid *Grid) Dump() {
 	for y := 0; y < grid.Config.Height; y++ {
 		for x := 0; x < grid.Config.Width; x++ {
-			if grid.Data[y][x] == 1 {
+			if grid.Data[y+STRIDE*x] == 1 {
 				fmt.Print("XX")
 			} else {
 				fmt.Print("  ")
@@ -183,7 +184,7 @@ func (grid *Grid) LoadRLE(pattern *rle.RLE) {
 					x = colIndex + startX
 					y = rowIndex + startY
 
-					grid.Data[y][x] = 1
+					grid.Data[y+STRIDE*x] = 1
 				}
 			}
 		}
@@ -291,10 +292,10 @@ func (grid *Grid) SaveState(filename, rule string) error {
 
 	fmt.Fprintf(file, "#Life 1.05\n#R %s\n#D golsky state file\n#P -1 -1\n", rule)
 
-	for y := range grid.Data {
-		for _, cell := range grid.Data[y] {
+	for y := 0; y < grid.Config.Height; y++ {
+		for x := 0; x < grid.Config.Width; x++ {
 			row := "."
-			if cell == 1 {
+			if grid.Data[y+STRIDE*x] == 1 {
 				row = "o"
 			}
 
