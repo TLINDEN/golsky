@@ -19,10 +19,12 @@ type Neighbor struct {
 	X, Y int
 }
 
+const max int = 2250000
+
 type Grid struct {
-	Data          []uint8
-	NeighborCount []int
-	Neighbors     [][]Neighbor
+	Data          [max]uint8
+	NeighborCount [max]int
+	Neighbors     [max][]Neighbor
 	Empty         bool
 	Config        *Config
 	Counter       func(x, y int) uint8
@@ -35,29 +37,29 @@ func NewGrid(config *Config) *Grid {
 		STRIDE = config.Width
 	}
 
-	size := STRIDE * STRIDE
+	//size := STRIDE * STRIDE
 
 	grid := &Grid{
-		Data:          make([]uint8, size),
-		NeighborCount: make([]int, size),
-		Neighbors:     make([][]Neighbor, size),
-		Empty:         config.Empty,
-		Config:        config,
+		//Data:          make([]uint8, size),
+		//NeighborCount: make([]int, size),
+		//Neighbors:     make([][]Neighbor, size),
+		Empty:  config.Empty,
+		Config: config,
 	}
 
 	// first setup the cells
-	for y := 0; y < config.Height; y++ {
-		for x := 0; x < config.Width; x++ {
-			grid.Data[y+STRIDE*x] = 0
-		}
-	}
+	// for y := 0; y < config.Height; y++ {
+	// 	for x := 0; x < config.Width; x++ {
+	// 		grid.Data[y+STRIDE*x] = 0
+	// 	}
+	// }
 
 	// in a second pass, collect positions to the neighbors of each cell
-	for y := 0; y < config.Height; y++ {
-		for x := 0; x < config.Width; x++ {
-			grid.SetupNeighbors(x, y)
-		}
-	}
+	// for y := 0; y < config.Height; y++ {
+	// 	for x := 0; x < config.Width; x++ {
+	// 		grid.SetupNeighbors(x, y)
+	// 	}
+	// }
 
 	if grid.Config.Wrap {
 		grid.Counter = grid.CountNeighborsWrap
@@ -110,19 +112,23 @@ func (grid *Grid) SetupNeighbors(x, y int) {
 
 func (grid *Grid) CountNeighborsWrap(x, y int) uint8 {
 	var sum uint8
+	var col, row int
+
+	width := grid.Config.Width
+	height := grid.Config.Height
 
 	for nbgX := -1; nbgX < 2; nbgX++ {
 		for nbgY := -1; nbgY < 2; nbgY++ {
-			var col, row int
 
 			// In wrap mode we look at all the 8 neighbors surrounding us.
 			// In case we are on an edge we'll look at the neighbor on the
 			//  other side  of the  grid, thus  wrapping lookahead  around
 			// using the mod() function.
-			col = (x + nbgX + grid.Config.Width) % grid.Config.Width
-			row = (y + nbgY + grid.Config.Height) % grid.Config.Height
+			col = (x + nbgX + width) % width
+			row = (y + nbgY + height) % height
 
-			sum += grid.Data[row+STRIDE*col]
+			p := row + STRIDE*col
+			sum += grid.Data[p]
 		}
 	}
 
@@ -134,6 +140,7 @@ func (grid *Grid) CountNeighborsWrap(x, y int) uint8 {
 
 func (grid *Grid) CountNeighbors(x, y int) uint8 {
 	var sum uint8
+	var val uint8
 
 	width := grid.Config.Width
 	height := grid.Config.Height
@@ -152,7 +159,9 @@ func (grid *Grid) CountNeighbors(x, y int) uint8 {
 			col = xnbgX
 			row = ynbgY
 
-			sum += grid.Data[row+STRIDE*col]
+			p := row + STRIDE*col
+			val = grid.Data[p]
+			sum += val // this uses 18% of the whole running time!
 		}
 	}
 
