@@ -1,9 +1,13 @@
+[![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/tlinden/golsky/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tlinden/golsky)](https://goreportcard.com/report/github.com/tlinden/golsky) 
+
 # golsky - Conway's game of life written in GO
+
+> [!IMPORTANT]
+> This software is now being maintained on [Codeberg](https://codeberg.org/scip/golsky/).
 
 ![Golsky Logo](https://github.com/TLINDEN/golsky/blob/main/.github/assets/golskylogo.png)
 
-[![License](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/tlinden/golsky/blob/master/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/tlinden/golsky)](https://goreportcard.com/report/github.com/tlinden/golsky) 
 
 I wanted to play around a little bit with [**Conways Game of Life**](https://conwaylife.com/)
 in golang and here's the  result. It's a simple game using
